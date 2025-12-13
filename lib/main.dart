@@ -15,6 +15,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Part Timer',
       theme: ThemeData(primarySwatch: Colors.blue),
+      // home: const SignUpPage(),
       home: const SignInPage(),
     );
   }

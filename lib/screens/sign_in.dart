@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'sign_up.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -165,11 +166,10 @@ class _SignInPageState extends State<SignInPage> {
                             children: [
                               TextButton(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Create account flow not implemented',
-                                      ),
+                                  // ?----------------- Navigate to SignUpPage -----------------?
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const SignUpPage(),
                                     ),
                                   );
                                 },
