@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'sign_in.dart';
+import '../services/api_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -33,26 +34,38 @@ class _SignUpPageState extends State<SignUpPage> {
 
   // ! MARK: On-Submit
   void _submit() async {
-    if (_role == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a role')));
-      return;
-    }
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || _role == null) return;
+
     setState(() => _loading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _loading = false);
-    final fullName =
-        '${_firstController.text.trim()} ${_lastController.text.trim()}'.trim();
-    final email = _emailController.text.trim();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => HomePage(email: email)),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Account created for $fullName ($roleLabel)')),
-    );
+
+    try {
+      await ApiService.register(
+        name: '${_firstController.text.trim()} ${_lastController.text.trim()}',
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        userType: _role!,
+      );
+
+      // On successful registration, navigate to SignInPage
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful! Please sign in.')),
+        );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const SignInPage()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
   }
 
   String get roleLabel {

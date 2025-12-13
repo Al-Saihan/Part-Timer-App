@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'sign_up.dart';
+import '../services/api_service.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -22,17 +23,33 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
-  // ! MARK: ON-SUBMIT
+  // ! MARK: On-Submit
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _loading = false);
-    final email = _emailController.text.trim();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => HomePage(email: email)),
-    );
+
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      await ApiService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      // ? On successful login, navigate to HomePage
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login Successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: $e')),
+      );
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   @override
