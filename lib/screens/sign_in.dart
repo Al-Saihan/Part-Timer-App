@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'sign_up.dart';
+import 'home.dart';
 import '../services/api_service.dart';
 
 class SignInPage extends StatefulWidget {
@@ -38,8 +39,11 @@ class _SignInPageState extends State<SignInPage> {
       );
 
       // ? On successful login, navigate to HomePage
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Successfully!')),
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => HomePage(email: _emailController.text.trim()),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -254,15 +258,3 @@ class _SignInPageState extends State<SignInPage> {
   }
 }
 
-class HomePage extends StatelessWidget {
-  final String email;
-  const HomePage({super.key, required this.email});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: Center(child: Text('Signed in as $email')),
-    );
-  }
-}
