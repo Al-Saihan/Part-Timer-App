@@ -311,13 +311,21 @@ void _showJobDetails(BuildContext context, Job job) {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Job applied (API hook comes later)'),
-                          ),
+
+                        final scaffold = ScaffoldMessenger.of(context);
+                        scaffold.showSnackBar(
+                          const SnackBar(content: Text('Applying...')),
                         );
+
+                        try {
+                          final res = await ApiService.applyJob(jobId: job.id);
+                          final msg = (res['message'] ?? 'Applied successfully').toString();
+                          scaffold.showSnackBar(SnackBar(content: Text(msg)));
+                        } catch (e) {
+                          scaffold.showSnackBar(SnackBar(content: Text('Apply failed: $e')));
+                        }
                       },
                       child: const Text('Apply'),
                     ),
