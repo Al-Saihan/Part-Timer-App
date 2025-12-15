@@ -66,8 +66,9 @@ class ApiService {
           if (body['data'] is Map) {
             final data = body['data'] as Map<String, dynamic>;
             if (data['token'] is String) token = data['token'];
-            if (data['user'] is Map && data['user']['id'] != null)
+            if (data['user'] is Map && data['user']['id'] != null) {
               userId = data['user']['id'];
+            }
             if (data['id'] is int) userId = data['id'];
             if (data['user_id'] is int) userId = data['user_id'];
           }
@@ -80,6 +81,22 @@ class ApiService {
 
           if (token != null) await saveToken(token);
           if (userId != null) await saveUserId(userId);
+          // detect and save user_type when present
+          try {
+            String? utype;
+            if (body['user'] is Map && body['user']['user_type'] is String) {
+              utype = body['user']['user_type'];
+            }
+            if (body['data'] is Map) {
+              final data = body['data'] as Map<String, dynamic>;
+              if (data['user'] is Map && data['user']['user_type'] is String) {
+                utype = data['user']['user_type'];
+              }
+              if (data['user_type'] is String) utype = data['user_type'];
+            }
+            if (body['user_type'] is String) utype = body['user_type'];
+            if (utype != null) await saveUserType(utype);
+          } catch (_) {}
         }
       } catch (_) {}
 
@@ -168,11 +185,12 @@ class ApiService {
     if (seekerId == null) {
       try {
         final fetched = await _fetchCurrentUser();
-        if (fetched != null && fetched is Map<String, dynamic>) {
-          if (fetched['id'] is int)
+        if (fetched != null) {
+          if (fetched['id'] is int) {
             seekerId = fetched['id'];
-          else if (fetched['user_id'] is int)
+          } else if (fetched['user_id'] is int) {
             seekerId = fetched['user_id'];
+          }
 
           if (seekerId != null) {
             await saveUserId(seekerId);
@@ -225,6 +243,54 @@ class ApiService {
       final bodyStr = response.body;
       debugPrint('Error applying to job: ${response.statusCode} $bodyStr');
       throw Exception('Failed to apply: ${response.statusCode} $bodyStr');
+    }
+  }
+
+  // ! MARK: CREATE JOB (recruiter)
+  static Future<Map<String, dynamic>> createJob({
+    required String title,
+    required String description,
+    required String difficulty,
+    required int workingHours,
+    required double payment,
+  }) async {
+    final url = Uri.parse('$baseUrl/jobs');
+    final token = await getToken();
+    final recruiterId = await getUserId();
+
+    if (recruiterId == null) {
+      throw Exception('Missing recruiter_id: cannot create job without a recruiter id.');
+    }
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final body = jsonEncode({
+      'recruiter_id': recruiterId,
+      'title': title,
+      'description': description,
+      'difficulty': difficulty,
+      'working_hours': workingHours,
+      'payment': payment,
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    debugPrint('Create job - Status code: ${response.statusCode}');
+    debugPrint('Create job - Response body: ${response.body}');
+
+    try {
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return parsed is Map<String, dynamic> ? parsed : {'success': true};
+      } else {
+        throw Exception('Failed to create job: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create job: $e');
     }
   }
 }
