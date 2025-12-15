@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/job.dart';
+import '../includes/auth.dart';
+import 'sign_in.dart';
 
 class HomePage extends StatelessWidget {
   final String? email;
@@ -227,6 +229,37 @@ Drawer _buildDrawer(BuildContext context) {
           title: const Text('Button 3'),
           onTap: () => Navigator.pop(context),
         ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.logout, color: Colors.red),
+          title: const Text(
+            'Logout',
+            style: TextStyle(color: Colors.red),
+          ),
+          onTap: () async {
+            Navigator.pop(context); // close drawer
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Logging out...')),
+            );
+
+            try {
+              await ApiService.logout();
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Logout API failed: $e')),
+              );
+            } finally {
+              await clearToken();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const SignInPage()),
+                  (route) => false,
+                );
+              }
+            }
+          },
+        ),
       ],
     ),
   );
@@ -299,9 +332,7 @@ void _showJobDetails(BuildContext context, Job job) {
   );
 }
 
-////////////////////////////////////////////////////////////
-/// HELPER WIDGET
-////////////////////////////////////////////////////////////
+// ? MARK: Helper Wgt
 
 Widget _infoRow(IconData icon, String label, String value) {
   return Padding(

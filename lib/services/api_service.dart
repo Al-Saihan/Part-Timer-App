@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/job.dart';
+import '../includes/auth.dart';
+
 class ApiService {
   // ! Base URL - Laravel backend
   static final String baseUrl =
@@ -50,7 +52,27 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final body = jsonDecode(response.body);
+
+      // Try to detect token in common response shapes and save it
+      try {
+        if (body is Map<String, dynamic>) {
+          String? token;
+          if (body['token'] is String) {
+            token = body['token'];
+          } else if (body['access_token'] is String) {
+            token = body['access_token'];
+          } else if (body['data'] is Map && body['data']['token'] is String) {
+            token = body['data']['token'];
+          }
+
+          if (token != null) {
+            await saveToken(token);
+          }
+        }
+      } catch (_) {}
+
+      return body;
     } else {
       throw Exception(
         'Failed to login: ${response.statusCode} ${response.body}',
@@ -62,7 +84,13 @@ class ApiService {
   static Future<List<Job>> fetchJobs() async {
     final url = Uri.parse('$baseUrl/jobs');
 
-    final response = await http.get(url);
+    final token = await getToken();
+    final headers = {"Content-Type": "application/json"};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -71,6 +99,22 @@ class ApiService {
       throw Exception(
         'Failed to fetch jobs: ${response.statusCode} ${response.body}',
       );
+    }
+  }
+
+  // ! MARK: LOGOUT
+  static Future<void> logout() async {
+    final url = Uri.parse('$baseUrl/logout');
+    final token = await getToken();
+    final headers = {"Content-Type": "application/json"};
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.post(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      return;
+    } else {
+      throw Exception('Failed to logout: ${response.statusCode} ${response.body}');
     }
   }
 }
