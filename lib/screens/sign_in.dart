@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'sign_up.dart';
-import 'home.dart';
+import 'home_seeker.dart';
+import 'home_recruiter.dart';
 import '../services/api_service.dart';
+import '../includes/auth.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -40,11 +42,17 @@ class _SignInPageState extends State<SignInPage> {
 
       // ? On successful login, navigate to HomePage
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomePage(email: _emailController.text.trim()),
-        ),
-      );
+      // decide where to go based on saved user_type
+      final type = await getUserType();
+      if (type == 'recruiter') {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeRecruiterPage()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeSeekerPage(email: _emailController.text.trim())),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login failed: $e')),

@@ -4,11 +4,11 @@ import '../models/job.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
 
-class HomePage extends StatelessWidget {
+// ! MARK: Start
+class HomeSeekerPage extends StatelessWidget {
   final String? email;
-  const HomePage({super.key, this.email});
+  const HomeSeekerPage({super.key, this.email});
 
-  // ! MARK: Tabbed Scaffold
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -21,7 +21,7 @@ class HomePage extends StatelessWidget {
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-          title: const Text('Title Undecided'),
+          title: const Text('Seeker Dashboard'),
           centerTitle: true,
           bottom: const TabBar(
             tabs: [
@@ -31,9 +31,7 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
-
         drawer: _buildDrawer(context),
-
         body: const TabBarView(
           children: [HomeTab(), AppliedJobsTab(), ProfileTab()],
         ),
@@ -42,6 +40,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// ! MARK: Home Tab
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
 
@@ -50,7 +49,7 @@ class HomeTab extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // ! MARK: Seeker Info
+          // ! MARK: User Profile
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -71,10 +70,9 @@ class HomeTab extends StatelessWidget {
               ],
             ),
           ),
-
           const Divider(),
 
-          // ! MARK: Jobs List Header
+          // ! MARK: Available
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Align(
@@ -116,7 +114,7 @@ class HomeTab extends StatelessWidget {
                 );
               }
 
-              // ! MARK: Jobs List 
+              // ! MARK: Jobs ListView
               return ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -173,8 +171,7 @@ class HomeTab extends StatelessWidget {
   }
 }
 
-
-// ! MARK: AppliedJobs
+// ! MARK: Applied Jobs
 class AppliedJobsTab extends StatelessWidget {
   const AppliedJobsTab({super.key});
 
@@ -189,7 +186,7 @@ class AppliedJobsTab extends StatelessWidget {
   }
 }
 
-// ! MARK: Profile
+// ! MARK: Profile Tab
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
@@ -230,6 +227,8 @@ Drawer _buildDrawer(BuildContext context) {
           onTap: () => Navigator.pop(context),
         ),
         const Divider(),
+
+        // ! MARK: Logout
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text(
@@ -278,6 +277,7 @@ void _showJobDetails(BuildContext context, Job job) {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ! MARK: Job Title
               Text(
                 job.title,
                 style: const TextStyle(
@@ -286,8 +286,12 @@ void _showJobDetails(BuildContext context, Job job) {
                 ),
               ),
               const SizedBox(height: 12),
+
+              // ! MARK: Job Description
               Text(job.description),
               const SizedBox(height: 16),
+
+              // ! MARK: Job Details
               _infoRow(Icons.bar_chart, 'Difficulty', job.difficulty),
               _infoRow(
                 Icons.schedule,
@@ -300,6 +304,8 @@ void _showJobDetails(BuildContext context, Job job) {
                 '${job.payment} Taka per hour',
               ),
               const SizedBox(height: 24),
+
+              // ! MARK: Action Btns
               Row(
                 children: [
                   Expanded(
@@ -340,8 +346,7 @@ void _showJobDetails(BuildContext context, Job job) {
   );
 }
 
-// ? MARK: Helper Wgt
-
+// ! MARK: Info Row
 Widget _infoRow(IconData icon, String label, String value) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
