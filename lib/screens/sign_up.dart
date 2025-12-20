@@ -18,6 +18,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -307,9 +308,13 @@ class _SignUpPageState extends State<SignUpPage> {
                                 const SizedBox(height: 12),
                                 TextFormField(
                                   controller: _passwordController,
-                                  obscureText: true,
-                                  decoration: const InputDecoration(
+                                  obscureText: _obscurePassword,
+                                  decoration: InputDecoration(
                                     labelText: 'Password',
+                                    suffixIcon: IconButton(
+                                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                    ),
                                   ),
                                   validator: (v) {
                                     if (v == null || v.isEmpty) {

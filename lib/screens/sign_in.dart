@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'sign_up.dart';
 import 'home_seeker.dart';
 import 'home_recruiter.dart';
+import 'forgot_password.dart';
 import '../services/api_service.dart';
 import '../includes/auth.dart';
 
@@ -18,6 +19,7 @@ class _SignInPageState extends State<SignInPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -170,12 +172,16 @@ class _SignInPageState extends State<SignInPage> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: Icon(Icons.lock, color: Colors.blue),
-                              focusedBorder: OutlineInputBorder(
+                              prefixIcon: const Icon(Icons.lock, color: Colors.blue),
+                              focusedBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.blue),
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.blue),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                               ),
                             ),
                             validator: (v) {
@@ -209,13 +215,7 @@ class _SignInPageState extends State<SignInPage> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Reset password flow not implemented',
-                                      ),
-                                    ),
-                                  );
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordPage()));
                                 },
                                 child: const Text(
                                   'Forget Password?',

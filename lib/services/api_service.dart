@@ -419,4 +419,34 @@ class ApiService {
       throw Exception('Failed to update status: ${response.statusCode} ${response.body}');
     }
   }
+
+  // ! MARK: Forgot password (verify email exists)
+  static Future<Map<String, dynamic>> forgotPassword({required String email}) async {
+    final url = Uri.parse('$baseUrl/password/forgot');
+    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final body = jsonEncode({'email': email});
+
+    final response = await http.post(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      return parsed is Map<String, dynamic> ? parsed : {'message': 'OK'};
+    } else {
+      throw Exception('Failed to verify email: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Reset password (change password by email)
+  static Future<Map<String, dynamic>> resetPassword({required String email, required String password, required String passwordConfirmation}) async {
+    final url = Uri.parse('$baseUrl/password/reset');
+    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final body = jsonEncode({'email': email, 'password': password, 'password_confirmation': passwordConfirmation});
+
+    final response = await http.post(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      return parsed is Map<String, dynamic> ? parsed : {'message': 'OK'};
+    } else {
+      throw Exception('Failed to reset password: ${response.statusCode} ${response.body}');
+    }
+  }
 }
