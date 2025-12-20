@@ -131,6 +131,28 @@ class ApiService {
     }
   }
 
+  // ! MARK: Fetch single job details
+  static Future<Map<String, dynamic>> fetchJobDetails({required int jobId}) async {
+    final url = Uri.parse('$baseUrl/jobs/$jobId');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      if (parsed is Map<String, dynamic>) return parsed;
+      throw Exception('Unexpected job details format');
+    } else {
+      throw Exception('Failed to fetch job details: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ! MARK: Logout
   static Future<void> logout() async {
     final url = Uri.parse('$baseUrl/logout');

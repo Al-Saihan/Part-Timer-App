@@ -4,6 +4,52 @@ import '../models/job.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
 
+String _formatDate(dynamic raw) {
+  if (raw == null) return '';
+  try {
+    DateTime dt;
+    if (raw is int) {
+      dt = DateTime.fromMillisecondsSinceEpoch(raw > 9999999999 ? raw : raw * 1000, isUtc: true).toLocal();
+    } else if (raw is String) {
+      dt = DateTime.parse(raw).toLocal();
+    } else if (raw is DateTime) {
+      dt = raw.toLocal();
+    } else {
+      return raw.toString();
+    }
+
+    const months = [
+      'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
+    ];
+    final m = months[dt.month - 1];
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${dt.day} $m ${dt.year} • ${two(dt.hour)}:${two(dt.minute)}';
+  } catch (_) {
+    return raw.toString();
+  }
+}
+
+Widget _buildProfileAvatar(Map<String, dynamic>? user) {
+  String? img;
+  if (user != null) {
+    img = user['avatar']?.toString() ?? user['profile_picture']?.toString() ?? user['photo']?.toString() ?? user['image']?.toString() ?? user['picture']?.toString();
+  }
+
+  if (img == null || img.isEmpty) {
+    return const CircleAvatar(radius: 30, child: Icon(Icons.person, size: 35));
+  }
+
+  String url = img;
+  try {
+    if (!url.startsWith('http')) {
+      final baseRoot = ApiService.baseUrl.replaceAll('/api', '');
+      url = baseRoot + (img.startsWith('/') ? img : '/$img');
+    }
+  } catch (_) {}
+
+  return CircleAvatar(radius: 40, backgroundColor: Colors.grey[200], backgroundImage: NetworkImage(url), child: const SizedBox.shrink());
+}
+
 // ! MARK: Start
 class HomeSeekerPage extends StatelessWidget {
   final String? email;
@@ -41,35 +87,112 @@ class HomeSeekerPage extends StatelessWidget {
 }
 
 // ! MARK: Home Tab
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  late Future<List<Job>> _jobsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _jobsFuture = ApiService.fetchJobs();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _jobsFuture = ApiService.fetchJobs();
+    });
+    await _jobsFuture;
+  }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // ! MARK: User Profile
+          // Profile (copied from recruiter dashboard)
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: const [
-                Expanded(
-                  child: Placeholder(
-                    fallbackHeight: 150,
-                    child: Center(child: Text('User Profile Info')),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Placeholder(
-                    fallbackHeight: 150,
-                    child: Center(child: Text('Profile Picture')),
-                  ),
-                ),
-              ],
+            child: FutureBuilder<Map<String, dynamic>?>(
+              future: ApiService.fetchCurrentUser(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    height: 160,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final user = snapshot.data;
+
+                return Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: user == null
+                              ? const Center(child: Text('No profile data'))
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user['name']?.toString() ?? 'No name',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      user['email']?.toString() ?? 'No email',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Role: ${user['user_type'] ?? user['type'] ?? 'unknown'}',
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Created: ${_formatDate(user['created_at'] ?? user['createdAt'] ?? user['created'] ?? user['registered_at'] ?? '')}',
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SizedBox(
+                          height: 135,
+                          child: Center(child: _buildProfileAvatar(null)),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
+
           const Divider(),
 
           // ! MARK: Available
@@ -86,7 +209,7 @@ class HomeTab extends StatelessWidget {
 
           // ! MARK: Jobs List
           FutureBuilder<List<Job>>(
-            future: ApiService.fetchJobs(),
+            future: _jobsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Padding(
@@ -127,7 +250,7 @@ class HomeTab extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: 2,
                     child: ListTile(
-                      onTap: () => _showJobDetails(context, job),
+                      onTap: () => _showJobDetails(context, job, onApplied: _refresh),
                       title: Text(
                         job.title,
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -265,80 +388,99 @@ Drawer _buildDrawer(BuildContext context) {
 }
 
 // ! MARK: Job Details
-void _showJobDetails(BuildContext context, Job job) {
+Future<void> _showJobDetails(BuildContext context, Job job, {VoidCallback? onApplied}) async {
+  final scaffold = ScaffoldMessenger.of(context);
+  scaffold.showSnackBar(const SnackBar(content: Text('Loading job details...')));
+
+  Map<String, dynamic>? details;
+  try {
+    details = await ApiService.fetchJobDetails(jobId: job.id);
+  } catch (_) {
+    // fallback to minimal data when details endpoint not available
+    details = null;
+  }
+
+  String createdStr = '';
+  if (details != null) {
+    createdStr = _formatDate(details['created_at'] ?? details['createdAt'] ?? details['posted_at'] ?? '');
+  }
+
+  final title = details != null ? (details['title'] ?? job.title) : job.title;
+  final description = details != null ? (details['description'] ?? job.description) : job.description;
+  final difficulty = details != null ? (details['difficulty'] ?? job.difficulty) : job.difficulty;
+  final workingHours = details != null ? (details['working_hours']?.toString() ?? details['workingHours']?.toString() ?? job.workingHours.toString()) : job.workingHours.toString();
+  final payment = details != null ? (details['payment']?.toString() ?? job.payment.toString()) : job.payment.toString();
+
   showDialog(
     context: context,
     builder: (context) {
       return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ! MARK: Job Title
-              Text(
-                job.title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                              // Header: title (no recruiter profile shown)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 6),
+                                  if (createdStr.isNotEmpty) Text(createdStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                const SizedBox(height: 12),
+
+                // Description
+                Text(description),
+                const SizedBox(height: 12),
+
+                // Info chips (wrap to avoid overflow)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    Chip(label: Text(difficulty.toString())),
+                    Chip(label: Text('$workingHours hrs/day')),
+                    Chip(label: Text('$payment per hour')),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
-              // ! MARK: Job Description
-              Text(job.description),
-              const SizedBox(height: 16),
-
-              // ! MARK: Job Details
-              _infoRow(Icons.bar_chart, 'Difficulty', job.difficulty),
-              _infoRow(
-                Icons.schedule,
-                'Working Hours',
-                '${job.workingHours} hrs/day',
-              ),
-              _infoRow(
-                Icons.payments,
-                'Payment',
-                '${job.payment} Taka per hour',
-              ),
-              const SizedBox(height: 24),
-
-              // ! MARK: Action Btns
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Close'),
+                // Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Close'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.pop(context);
-
-                        final scaffold = ScaffoldMessenger.of(context);
-                        scaffold.showSnackBar(
-                          const SnackBar(content: Text('Applying...')),
-                        );
-
-                        try {
-                          final res = await ApiService.applyJob(jobId: job.id);
-                          final msg = (res['message'] ?? 'Applied successfully').toString();
-                          scaffold.showSnackBar(SnackBar(content: Text(msg)));
-                        } catch (e) {
-                          scaffold.showSnackBar(SnackBar(content: Text('Apply failed: $e')));
-                        }
-                      },
-                      child: const Text('Apply'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          scaffold.showSnackBar(const SnackBar(content: Text('Applying...')));
+                          try {
+                            final res = await ApiService.applyJob(jobId: job.id);
+                            final msg = (res['message'] ?? 'Applied successfully').toString();
+                            scaffold.showSnackBar(SnackBar(content: Text(msg)));
+                            if (onApplied != null) onApplied();
+                          } catch (e) {
+                            scaffold.showSnackBar(SnackBar(content: Text('Apply failed: $e')));
+                          }
+                        },
+                        child: const Text('Apply'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -346,17 +488,4 @@ void _showJobDetails(BuildContext context, Job job) {
   );
 }
 
-// ! MARK: Info Row
-Widget _infoRow(IconData icon, String label, String value) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.grey[700]),
-        const SizedBox(width: 8),
-        Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w600)),
-        Expanded(child: Text(value)),
-      ],
-    ),
-  );
-}
+// Info row removed — replaced by chips in job details
