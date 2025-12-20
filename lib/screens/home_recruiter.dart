@@ -9,7 +9,10 @@ String _formatDate(dynamic raw) {
     DateTime dt;
     if (raw is int) {
       // assume epoch seconds or ms
-      dt = DateTime.fromMillisecondsSinceEpoch(raw > 9999999999 ? raw : raw * 1000, isUtc: true).toLocal();
+      dt = DateTime.fromMillisecondsSinceEpoch(
+        raw > 9999999999 ? raw : raw * 1000,
+        isUtc: true,
+      ).toLocal();
     } else if (raw is String) {
       dt = DateTime.parse(raw).toLocal();
     } else if (raw is DateTime) {
@@ -39,6 +42,7 @@ String _formatDate(dynamic raw) {
     return raw.toString();
   }
 }
+
 // ! MARK: Start
 class HomeRecruiterPage extends StatefulWidget {
   const HomeRecruiterPage({super.key});
@@ -48,13 +52,22 @@ class HomeRecruiterPage extends StatefulWidget {
 }
 
 // Show applicant details and allow recruiter to update status
-void _showApplicantDetails(BuildContext context, Map<String, dynamic> applicant, {VoidCallback? onUpdated}) {
+void _showApplicantDetails(
+  BuildContext context,
+  Map<String, dynamic> applicant, {
+  VoidCallback? onUpdated,
+}) {
   final seeker = applicant['seeker'] ?? applicant['user'] ?? {};
   final job = applicant['job'] ?? {};
-  final name = seeker is Map ? (seeker['name'] ?? seeker['email'] ?? 'Seeker') : 'Seeker';
+  final name = seeker is Map
+      ? (seeker['name'] ?? seeker['email'] ?? 'Seeker')
+      : 'Seeker';
   final email = seeker is Map ? (seeker['email'] ?? '') : '';
-  final jobTitle = job is Map ? (job['title'] ?? 'Job') : (applicant['job_title'] ?? 'Job');
-  final status = (applicant['STATUS'] ?? applicant['status'] ?? 'pending').toString();
+  final jobTitle = job is Map
+      ? (job['title'] ?? 'Job')
+      : (applicant['job_title'] ?? 'Job');
+  final status = (applicant['STATUS'] ?? applicant['status'] ?? 'pending')
+      .toString();
   final appliedAt = applicant['applied_at'] ?? applicant['created_at'] ?? '';
   final dateStr = _formatDate(appliedAt);
 
@@ -62,120 +75,233 @@ void _showApplicantDetails(BuildContext context, Map<String, dynamic> applicant,
     context: context,
     builder: (ctx) {
       bool loading = false;
-      return StatefulBuilder(builder: (ctx2, setState) {
-        return AlertDialog(
-          contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileAvatar(seeker),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name.toString(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        if (email.toString().isNotEmpty) Text(email.toString(), style: const TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 8),
-                        Text(jobTitle.toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
-                      ],
+      return StatefulBuilder(
+        builder: (ctx2, setState) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProfileAvatar(seeker),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name.toString(),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          if (email.toString().isNotEmpty)
+                            Text(
+                              email.toString(),
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          const SizedBox(height: 8),
+                          Text(
+                            jobTitle.toString(),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Chip(
-                    label: Text(status, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    backgroundColor: status.toLowerCase() == 'pending' ? Colors.orange[50] : (status.toLowerCase() == 'accepted' ? Colors.green[50] : Colors.red[50]),
-                  ),
-                  const Spacer(),
-                  if (dateStr.isNotEmpty) Text(dateStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Contact pressed'))),
-                    child: const Text('Contact'),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: loading
-                          ? null
-                          : () async {
-                              final aid = applicant['id'] ?? applicant['application_id'] ?? applicant['app_id'];
-                              final appId = aid is int ? aid : int.tryParse(aid?.toString() ?? '') ?? 0;
-                              if (appId == 0) {
-                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Invalid application id')));
-                                return;
-                              }
-                              setState(() => loading = true);
-                              try {
-                                await ApiService.updateApplicationStatus(applicationId: appId, status: 'rejected');
-                                Navigator.pop(ctx2);
-                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Application rejected')));
-                                if (onUpdated != null) onUpdated();
-                              } catch (e) {
-                                ScaffoldMessenger.of(ctx2).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                              } finally {
-                                setState(() => loading = false);
-                              }
-                            },
-                      child: const Text('Reject', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Chip(
+                      label: Text(
+                        status,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      backgroundColor: status.toLowerCase() == 'pending'
+                          ? Colors.orange[50]
+                          : (status.toLowerCase() == 'accepted'
+                                ? Colors.green[50]
+                                : Colors.red[50]),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      onPressed: loading
-                          ? null
-                          : () async {
-                              final aid = applicant['id'] ?? applicant['application_id'] ?? applicant['app_id'];
-                              final appId = aid is int ? aid : int.tryParse(aid?.toString() ?? '') ?? 0;
-                              if (appId == 0) {
-                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Invalid application id')));
-                                return;
-                              }
-                              setState(() => loading = true);
-                              try {
-                                await ApiService.updateApplicationStatus(applicationId: appId, status: 'accepted');
-                                Navigator.pop(ctx2);
-                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Application accepted')));
-                                if (onUpdated != null) onUpdated();
-                              } catch (e) {
-                                ScaffoldMessenger.of(ctx2).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                              } finally {
-                                setState(() => loading = false);
-                              }
-                            },
-                      child: loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Accept'),
+                    const Spacer(),
+                    if (dateStr.isNotEmpty)
+                      Text(
+                        dateStr,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Divider(),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => ScaffoldMessenger.of(ctx2).showSnackBar(
+                        const SnackBar(content: Text('Contact pressed')),
+                      ),
+                      child: const Text('Contact'),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      });
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: loading
+                            ? null
+                            : () async {
+                                final aid =
+                                    applicant['id'] ??
+                                    applicant['application_id'] ??
+                                    applicant['app_id'];
+                                final appId = aid is int
+                                    ? aid
+                                    : int.tryParse(aid?.toString() ?? '') ?? 0;
+                                if (appId == 0) {
+                                  ScaffoldMessenger.of(ctx2).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Invalid application id'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                setState(() => loading = true);
+                                try {
+                                  await ApiService.updateApplicationStatus(
+                                    applicationId: appId,
+                                    status: 'rejected',
+                                  );
+                                  Navigator.pop(ctx2);
+                                  ScaffoldMessenger.of(ctx2).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Application rejected'),
+                                    ),
+                                  );
+                                  if (onUpdated != null) onUpdated();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(ctx2).showSnackBar(
+                                    SnackBar(content: Text('Failed: $e')),
+                                  );
+                                } finally {
+                                  setState(() => loading = false);
+                                }
+                              },
+                        child: const Text(
+                          'Reject',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        onPressed: loading
+                            ? null
+                            : () async {
+                                final aid =
+                                    applicant['id'] ??
+                                    applicant['application_id'] ??
+                                    applicant['app_id'];
+                                final appId = aid is int
+                                    ? aid
+                                    : int.tryParse(aid?.toString() ?? '') ?? 0;
+                                if (appId == 0) {
+                                  ScaffoldMessenger.of(ctx2).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Invalid application id'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                setState(() => loading = true);
+                                try {
+                                  await ApiService.updateApplicationStatus(
+                                    applicationId: appId,
+                                    status: 'accepted',
+                                  );
+                                  Navigator.pop(ctx2);
+                                  ScaffoldMessenger.of(ctx2).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Application accepted'),
+                                    ),
+                                  );
+                                  if (onUpdated != null) onUpdated();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(ctx2).showSnackBar(
+                                    SnackBar(content: Text('Failed: $e')),
+                                  );
+                                } finally {
+                                  setState(() => loading = false);
+                                }
+                              },
+                        child: loading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Accept',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
     },
   );
 }
 
 Widget _buildProfileAvatar(Map<String, dynamic>? user) {
-  // look for common image keys
+  // Prefer using `profile_pic` (asset name) when present
+  if (user != null) {
+    final profilePic = user['profile_pic']?.toString();
+    if (profilePic != null && profilePic.isNotEmpty) {
+      final assetPath = 'assets/avatars/$profilePic.png';
+      return CircleAvatar(
+        radius: 40,
+        backgroundColor: Colors.grey[200],
+        child: ClipOval(
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.cover,
+            width: 80,
+            height: 80,
+            errorBuilder: (c, e, s) => const CircleAvatar(
+              radius: 30,
+              child: Icon(Icons.person, size: 35),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  // Fallback: support various remote image keys
   String? img;
   if (user != null) {
     img =
@@ -191,10 +317,8 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user) {
   }
 
   String url = img;
-  // if relative path, prefix with base url root
   try {
     if (!url.startsWith('http')) {
-      // remove trailing /api from base url
       final baseRoot = ApiService.baseUrl.replaceAll('/api', '');
       url = baseRoot + (img.startsWith('/') ? img : '/$img');
     }
@@ -357,9 +481,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                                         'Role: ${user['user_type'] ?? user['type'] ?? 'unknown'}',
                                       ),
                                       const SizedBox(height: 8),
-                                      Text(
-                                        'Created: ${_formatDate(user['created_at'] ?? user['createdAt'] ?? user['created'] ?? user['registered_at'] ?? '')}',
-                                      ),
+                                      const SizedBox(height: 8),
                                     ],
                                   ),
                           ),
@@ -453,7 +575,8 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                           ? (job['title'] ?? 'Job')
                           : (a['job_title'] ?? 'Job');
                       final status = (a['STATUS'] ?? a['status'] ?? 'pending')
-                          .toString().toUpperCase();
+                          .toString()
+                          .toUpperCase();
                       final appliedAt =
                           a['applied_at'] ?? a['created_at'] ?? '';
                       final dateStr = _formatDate(appliedAt);
@@ -466,7 +589,11 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),
-                          onTap: () => _showApplicantDetails(context, a, onUpdated: _refresh),
+                          onTap: () => _showApplicantDetails(
+                            context,
+                            a,
+                            onUpdated: _refresh,
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -512,7 +639,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                                         color: status.toLowerCase() == 'pending'
                                             ? Colors.orange[100]
                                             : status.toLowerCase() == 'rejected'
-                                                ? Colors.red[100]
+                                            ? Colors.red[100]
                                             : Colors.green[100],
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -611,10 +738,18 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
-                    Expanded(child: Text('Your Posted Jobs', style: Theme.of(context).textTheme.titleLarge)),
+                    Expanded(
+                      child: Text(
+                        'Your Posted Jobs',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
                     IconButton(
                       tooltip: 'Refresh',
                       icon: const Icon(Icons.refresh),
@@ -628,64 +763,75 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                   padding: const EdgeInsets.all(16),
                   itemCount: jobs.length,
                   itemBuilder: (context, index) {
-              final job = jobs[index];
-              final id = job['id'] ?? 0;
-              final title = job['title'] ?? 'Untitled';
-              final workingHours =
-                  job['working_hours']?.toString() ??
-                  job['workingHours']?.toString() ??
-                  '0';
-              final payment = job['payment']?.toString() ?? '0';
-              final appsCount =
-                  job['applications_count'] ?? job['applications'] ?? 0;
+                    final job = jobs[index];
+                    final id = job['id'] ?? 0;
+                    final title = job['title'] ?? 'Untitled';
+                    final workingHours =
+                        job['working_hours']?.toString() ??
+                        job['workingHours']?.toString() ??
+                        '0';
+                    final payment = job['payment']?.toString() ?? '0';
+                    final appsCount =
+                        job['applications_count'] ?? job['applications'] ?? 0;
 
-                  return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                elevation: 2,
-                child: ListTile(
-                  title: Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
-                        Text('$workingHours hrs/day'),
-                        const Spacer(),
-                        Icon(
-                          Icons.payments,
-                          size: 16,
-                          color: Colors.green[700],
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 2,
+                      child: ListTile(
+                        title: Text(
+                          title,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$payment per hour',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 4),
+                              Text('$workingHours hrs/day'),
+                              const Spacer(),
+                              Icon(
+                                Icons.payments,
+                                size: 16,
+                                color: Colors.green[700],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$payment per hour',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$appsCount',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$appsCount',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'applicants',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showApplicantsDialog(context, id, title),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'applicants',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
-                  onTap: () => _showApplicantsDialog(context, id, title),
-                ),
-              );
-            },
+                    );
+                  },
                 ),
               ),
             ],
@@ -747,21 +893,41 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                             borderRadius: BorderRadius.circular(10),
                             onTap: () {
                               Navigator.pop(ctx);
-                              _showApplicantDetails(context, a, onUpdated: () => _refresh());
+                              _showApplicantDetails(
+                                context,
+                                a,
+                                onUpdated: () => _refresh(),
+                              );
                             },
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               child: Row(
                                 children: [
                                   _buildProfileAvatar(seeker),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(name.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        Text(
+                                          name.toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                         const SizedBox(height: 6),
-                                        if (dateStr.isNotEmpty) Text(dateStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                        if (dateStr.isNotEmpty)
+                                          Text(
+                                            dateStr,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
@@ -793,13 +959,399 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
 }
 
 // ! MARK: Profile Tab
-class ProfileTab extends StatelessWidget {
+class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
 
   @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  final _bioCtrl = TextEditingController();
+  final _locationCtrl = TextEditingController();
+  bool _loadingBio = false;
+  bool _loadingLocation = false;
+  late Future<Map<String, dynamic>?> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = ApiService.fetchCurrentUser();
+  }
+
+  @override
+  void dispose() {
+    _bioCtrl.dispose();
+    _locationCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshUser() async {
+    setState(() {
+      _userFuture = ApiService.fetchCurrentUser();
+    });
+    await _userFuture;
+  }
+
+  Future<void> _updateField(String field) async {
+    setState(() {
+      if (field == 'bio') _loadingBio = true;
+      if (field == 'location') _loadingLocation = true;
+    });
+
+    final scaffold = ScaffoldMessenger.of(context);
+    try {
+      if (field == 'bio') {
+        await ApiService.updateBio(
+          bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
+        );
+      } else if (field == 'location') {
+        await ApiService.updateLocation(
+          location: _locationCtrl.text.trim().isEmpty
+              ? null
+              : _locationCtrl.text.trim(),
+        );
+      }
+
+      scaffold.showSnackBar(
+        const SnackBar(content: Text('Updated successfully')),
+      );
+      await _refreshUser();
+    } catch (e) {
+      scaffold.showSnackBar(SnackBar(content: Text('Update failed: $e')));
+    } finally {
+      setState(() {
+        if (field == 'bio') _loadingBio = false;
+        if (field == 'location') _loadingLocation = false;
+      });
+    }
+  }
+
+  void _showProfileActions() {
+    // Directly open avatar chooser — remove "Edit Details" option
+    _showAvatarChooser();
+  }
+
+  Future<void> _showAvatarChooser() async {
+    final scaffold = ScaffoldMessenger.of(context);
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        bool loading = false;
+        return StatefulBuilder(
+          builder: (ctx2, setState) {
+            return AlertDialog(
+              title: const Text('Choose Avatar'),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 420,
+                child: Column(
+                  children: [
+                    const Text('Select an avatar from the set'),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: GridView.count(
+                        crossAxisCount: 5,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        children: List.generate(50, (i) {
+                          final idx = i + 1;
+                          final name = 'Avatars Set Flat Style-$idx';
+                          final assetPath = 'assets/avatars/$name.png';
+
+                          return GestureDetector(
+                            onTap: loading
+                                ? null
+                                : () async {
+                                    setState(() => loading = true);
+                                    try {
+                                      await ApiService.updateProfilePic(
+                                        profilePic: name,
+                                      );
+                                      scaffold.showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Avatar updated'),
+                                        ),
+                                      );
+                                      Navigator.pop(ctx2);
+                                      await _refreshUser();
+                                    } catch (e) {
+                                      scaffold.showSnackBar(
+                                        SnackBar(
+                                          content: Text('Update failed: $e'),
+                                        ),
+                                      );
+                                      setState(() => loading = false);
+                                    }
+                                  },
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: ClipOval(
+                                    child: Image.asset(
+                                      assetPath,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c, e, s) =>
+                                          const CircleAvatar(
+                                            child: Icon(Icons.person),
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  idx.toString(),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                    if (loading)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: CircularProgressIndicator(),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx2),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Profile page', style: TextStyle(fontSize: 16)),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: _userFuture,
+          builder: (context, snapshot) {
+            final user = snapshot.data;
+
+            if (snapshot.connectionState == ConnectionState.done &&
+                user != null) {
+              if (_bioCtrl.text.isEmpty) {
+                _bioCtrl.text = user['bio']?.toString() ?? '';
+              }
+              if (_locationCtrl.text.isEmpty) {
+                _locationCtrl.text = (user['locations'] is List)
+                    ? (user['locations'] as List).join(', ')
+                    : (user['locations']?.toString() ??
+                          user['location']?.toString() ??
+                          '');
+              }
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?['name']?.toString() ?? 'No name',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                user?['email']?.toString() ?? 'No email',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Role: ${user?['user_type'] ?? user?['type'] ?? 'unknown'}',
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Created: ${_formatDate(user?['created_at'] ?? user?['createdAt'] ?? user?['created'] ?? '')}',
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            children: [
+                              Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: SizedBox(
+                                  height: 120,
+                                  child: Center(
+                                    child: _buildProfileAvatar(user),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 140,
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      onPressed: () => _showProfileActions(),
+                                      label: const Text('Edit'),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Bio
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Bio',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _bioCtrl,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Tell us about yourself',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: _loadingBio
+                                  ? null
+                                  : () => _updateField('bio'),
+                              child: _loadingBio
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Update Bio'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Locations
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Locations',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _locationCtrl,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter your address',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: _loadingLocation
+                                  ? null
+                                  : () => _updateField('location'),
+                              child: _loadingLocation
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Update Location'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

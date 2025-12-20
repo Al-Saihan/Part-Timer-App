@@ -22,14 +22,35 @@ String _formatDate(dynamic raw) {
       'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
     ];
     final m = months[dt.month - 1];
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${dt.day} $m ${dt.year} • ${two(dt.hour)}:${two(dt.minute)}';
+    return '${dt.day} $m ${dt.year}}';
   } catch (_) {
     return raw.toString();
   }
 }
 
 Widget _buildProfileAvatar(Map<String, dynamic>? user) {
+  // Prefer using `profile_pic` (asset name) when present
+  if (user != null) {
+    final profilePic = user['profile_pic']?.toString();
+    if (profilePic != null && profilePic.isNotEmpty) {
+      final assetPath = 'assets/avatars/$profilePic.png';
+      return CircleAvatar(
+        radius: 40,
+        backgroundColor: Colors.grey[200],
+        child: ClipOval(
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.cover,
+            width: 70,
+            height: 70,
+            errorBuilder: (c, e, s) => const CircleAvatar(radius: 30, child: Icon(Icons.person, size: 35)),
+          ),
+        ),
+      );
+    }
+  }
+
+  // Fallback: support various remote image keys
   String? img;
   if (user != null) {
     img = user['avatar']?.toString() ?? user['profile_picture']?.toString() ?? user['photo']?.toString() ?? user['image']?.toString() ?? user['picture']?.toString();
@@ -183,7 +204,7 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         child: SizedBox(
                           height: 135,
-                          child: Center(child: _buildProfileAvatar(null)),
+                          child: Center(child: _buildProfileAvatar(user)),
                         ),
                       ),
                     ),
@@ -312,7 +333,9 @@ class _AppliedJobsTabState extends State<AppliedJobsTab> {
   }
 
   Future<void> _refresh() async {
-    setState(() => _appliedFuture = ApiService.fetchAppliedJobs());
+    setState(() {
+      _appliedFuture = ApiService.fetchAppliedJobs();
+    });
     await _appliedFuture;
   }
 
@@ -410,14 +433,325 @@ class _AppliedJobsTabState extends State<AppliedJobsTab> {
 }
 
 // ! MARK: Profile Tab
-class ProfileTab extends StatelessWidget {
+class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
 
   @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  final _bioCtrl = TextEditingController();
+  final _skillsCtrl = TextEditingController();
+  final _locationsCtrl = TextEditingController();
+  bool _loadingBio = false;
+  bool _loadingSkills = false;
+  bool _loadingLocations = false;
+  late Future<Map<String, dynamic>?> _userFuture;
+
+  @override
+  void dispose() {
+    _bioCtrl.dispose();
+    _skillsCtrl.dispose();
+    _locationsCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = ApiService.fetchCurrentUser();
+  }
+
+  Future<void> _refreshUser() async {
+    setState(() {
+      _userFuture = ApiService.fetchCurrentUser();
+    });
+    await _userFuture;
+  }
+
+  Future<void> _updateField(String field) async {
+    setState(() {
+      if (field == 'bio') _loadingBio = true;
+      if (field == 'skills') _loadingSkills = true;
+      if (field == 'locations') _loadingLocations = true;
+    });
+
+    final scaffold = ScaffoldMessenger.of(context);
+    try {
+      if (field == 'bio') {
+        await ApiService.updateBio(bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim());
+      } else if (field == 'skills') {
+        await ApiService.updateSkills(skills: _skillsCtrl.text.trim().isEmpty ? null : _skillsCtrl.text.trim());
+      } else if (field == 'locations') {
+        await ApiService.updateLocation(location: _locationsCtrl.text.trim().isEmpty ? null : _locationsCtrl.text.trim());
+      }
+
+      scaffold.showSnackBar(const SnackBar(content: Text('Updated successfully')));
+      await _refreshUser();
+    } catch (e) {
+      scaffold.showSnackBar(SnackBar(content: Text('Update failed: $e')));
+    } finally {
+      setState(() {
+        if (field == 'bio') _loadingBio = false;
+        if (field == 'skills') _loadingSkills = false;
+        if (field == 'locations') _loadingLocations = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Profile page', style: TextStyle(fontSize: 16)),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: ApiService.fetchCurrentUser(),
+          builder: (context, snapshot) {
+            final user = snapshot.data;
+
+            // populate controllers once when data arrives
+            if (snapshot.connectionState == ConnectionState.done && user != null) {
+              if (_bioCtrl.text.isEmpty) _bioCtrl.text = user['bio']?.toString() ?? '';
+              if (_skillsCtrl.text.isEmpty) _skillsCtrl.text = (user['skills'] is List) ? (user['skills'] as List).join(', ') : (user['skills']?.toString() ?? '');
+              if (_locationsCtrl.text.isEmpty) _locationsCtrl.text = (user['locations'] is List) ? (user['locations'] as List).join(', ') : (user['locations']?.toString() ?? '');
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(user?['name']?.toString() ?? 'No name', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 6),
+                              Text(user?['email']?.toString() ?? 'No email', style: const TextStyle(color: Colors.grey)),
+                              const SizedBox(height: 6),
+                              Text('Role: ${user?['user_type'] ?? user?['type'] ?? 'unknown'}'),
+                              const SizedBox(height: 6),
+                              Text('Created: ${_formatDate(user?['created_at'] ?? user?['createdAt'] ?? user?['created'] ?? '')}'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            children: [
+                              Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                child: SizedBox(height: 120, child: Center(child: _buildProfileAvatar(user))),
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 140,
+                                    child: OutlinedButton.icon(
+                                            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 10)),
+                                            onPressed: () => _showProfileActions(user),
+                                            label: const Text('Edit'),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Bio section
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('Bio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _bioCtrl,
+                          maxLines: 4,
+                          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Tell us about yourself'),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: _loadingBio ? null : () => _updateField('bio'),
+                              child: _loadingBio ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Update Bio'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Skills section
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('Skills', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _skillsCtrl,
+                          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Enter comma separated skills'),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: _loadingSkills ? null : () => _updateField('skills'),
+                              child: _loadingSkills ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Update Skills'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Locations section
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('Locations', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _locationsCtrl,
+                          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Enter your address'),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Spacer(),
+                            ElevatedButton(
+                              onPressed: _loadingLocations ? null : () => _updateField('locations'),
+                              child: _loadingLocations ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Update Locations'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
+  }
+
+  Future<void> _showAvatarChooser(Map<String, dynamic>? user) async {
+    final scaffold = ScaffoldMessenger.of(context);
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        bool loading = false;
+        return StatefulBuilder(builder: (ctx2, setState) {
+          return AlertDialog(
+            title: const Text('Choose Avatar'),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 420,
+              child: Column(
+                children: [
+                  const Text('Select an avatar from the set'),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      children: List.generate(50, (i) {
+                        final idx = i + 1;
+                        final name = 'Avatars Set Flat Style-$idx';
+                        final assetPath = 'assets/avatars/$name.png';
+
+                        return GestureDetector(
+                          onTap: loading
+                              ? null
+                              : () async {
+                                  setState(() => loading = true);
+                                  try {
+                                    await ApiService.updateProfilePic(profilePic: name);
+                                    scaffold.showSnackBar(const SnackBar(content: Text('Avatar updated')));
+                                    Navigator.pop(ctx2);
+                                    await _refreshUser();
+                                  } catch (e) {
+                                    scaffold.showSnackBar(SnackBar(content: Text('Update failed: $e')));
+                                    setState(() => loading = false);
+                                  }
+                                },
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    assetPath,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, e, s) => const CircleAvatar(child: Icon(Icons.person)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(idx.toString(), style: const TextStyle(fontSize: 10)),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  if (loading) const Padding(padding: EdgeInsets.only(top: 8), child: CircularProgressIndicator()),
+                ],
+              ),
+            ),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx2), child: const Text('Close'))],
+          );
+        });
+      },
+    );
+  }
+
+  void _showProfileActions(Map<String, dynamic>? user) {
+    // Directly open avatar chooser — remove "Edit Details" option
+    _showAvatarChooser(user);
   }
 }
 
@@ -589,5 +923,3 @@ Future<void> _showJobDetails(BuildContext context, Job job, {VoidCallback? onApp
     },
   );
 }
-
-// Info row removed — replaced by chips in job details

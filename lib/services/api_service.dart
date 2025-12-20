@@ -449,4 +449,72 @@ class ApiService {
       throw Exception('Failed to reset password: ${response.statusCode} ${response.body}');
     }
   }
+
+  // ! MARK: Update user bio
+  static Future<Map<String, dynamic>> updateBio({required String? bio}) async {
+    final url = Uri.parse('$baseUrl/user/bio');
+    final token = await getToken();
+    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    final body = jsonEncode({'bio': bio});
+
+    final response = await http.patch(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      return parsed is Map<String, dynamic> ? parsed : {'success': true};
+    } else {
+      throw Exception('Failed to update bio: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Update user skills
+  static Future<Map<String, dynamic>> updateSkills({required String? skills}) async {
+    final url = Uri.parse('$baseUrl/user/skills');
+    final token = await getToken();
+    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    final body = jsonEncode({'skills': skills});
+
+    final response = await http.patch(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      return parsed is Map<String, dynamic> ? parsed : {'success': true};
+    } else {
+      throw Exception('Failed to update skills: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Update user location
+  static Future<Map<String, dynamic>> updateLocation({required String? location}) async {
+    final url = Uri.parse('$baseUrl/user/location');
+    final token = await getToken();
+    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    final body = jsonEncode({'location': location});
+
+    final response = await http.patch(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      return parsed is Map<String, dynamic> ? parsed : {'success': true};
+    } else {
+      throw Exception('Failed to update location: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Update user profile picture (select from predefined avatars)
+  static Future<Map<String, dynamic>> updateProfilePic({required String profilePic}) async {
+    final url = Uri.parse('$baseUrl/user/profile-pic');
+    final token = await getToken();
+    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    final body = jsonEncode({'profile_pic': profilePic});
+
+    final response = await http.patch(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      final parsed = jsonDecode(response.body);
+      return parsed is Map<String, dynamic> ? parsed : {'success': true};
+    } else {
+      throw Exception('Failed to update profile picture: ${response.statusCode} ${response.body}');
+    }
+  }
 }
