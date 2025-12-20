@@ -99,9 +99,9 @@ class ApiService {
           } catch (_) {}
         }
       } catch (_) {}
-
       return body;
     } else {
+      debugPrint('Login failed: ${response.statusCode} ${response.headers}');
       throw Exception(
         'Failed to login: ${response.statusCode} ${response.body}',
       );
@@ -156,7 +156,6 @@ class ApiService {
 
   // ! MARK: Fetch Current User
   static Future<Map<String, dynamic>?> _fetchCurrentUser() async {
-    final url = Uri.parse('$baseUrl/user');
     final token = await getToken();
     final headers = {
       "Content-Type": "application/json",
@@ -164,13 +163,26 @@ class ApiService {
     };
     if (token != null) headers['Authorization'] = 'Bearer $token';
 
-    final response = await http.get(url, headers: headers);
+    // Only call the canonical /me endpoint (keep client simple and avoid hitting non-existing endpoints)
+    try {
+      final url = Uri.parse('$baseUrl/me');
+      final response = await http.get(url, headers: headers);
+      if (response.statusCode == 200) {
+        try {
+          final parsed = jsonDecode(response.body);
+          return parsed is Map<String, dynamic> ? parsed : null;
+        } catch (_) {
+          return null;
+        }
+      }
+    } catch (_) {}
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      return null;
-    }
+    return null;
+  }
+
+  // Public wrapper to fetch current authenticated user
+  static Future<Map<String, dynamic>?> fetchCurrentUser() async {
+    return await _fetchCurrentUser();
   }
 
   // ! MARK: Job Apply
@@ -291,6 +303,77 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to create job: $e');
+    }
+  }
+
+  // ! MARK: Fetch Posted Jobs (recruiter)
+  static Future<List<Map<String, dynamic>>> fetchPostedJobs() async {
+    final url = Uri.parse('$baseUrl/jobs/posted');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } else {
+      throw Exception('Failed to fetch posted jobs: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Fetch Applicants (for recruiter's jobs)
+  static Future<List<Map<String, dynamic>>> fetchApplicants() async {
+    final url = Uri.parse('$baseUrl/applicants');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } else {
+      throw Exception('Failed to fetch applicants: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Update Application Status (recruiter)
+  static Future<Map<String, dynamic>> updateApplicationStatus({
+    required int applicationId,
+    required String status,
+  }) async {
+    final url = Uri.parse('$baseUrl/applications/$applicationId/status');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final body = jsonEncode({'status': status});
+    final response = await http.patch(url, headers: headers, body: body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      try {
+        final parsed = jsonDecode(response.body);
+        return parsed is Map<String, dynamic> ? parsed : {'success': true};
+      } catch (e) {
+        return {'success': true};
+      }
+    } else {
+      throw Exception('Failed to update status: ${response.statusCode} ${response.body}');
     }
   }
 }
