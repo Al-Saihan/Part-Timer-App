@@ -295,15 +295,115 @@ class _HomeTabState extends State<HomeTab> {
 }
 
 // ! MARK: Applied Jobs
-class AppliedJobsTab extends StatelessWidget {
+class AppliedJobsTab extends StatefulWidget {
   const AppliedJobsTab({super.key});
 
   @override
+  State<AppliedJobsTab> createState() => _AppliedJobsTabState();
+}
+
+class _AppliedJobsTabState extends State<AppliedJobsTab> {
+  late Future<List<Map<String, dynamic>>> _appliedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _appliedFuture = ApiService.fetchAppliedJobs();
+  }
+
+  Future<void> _refresh() async {
+    setState(() => _appliedFuture = ApiService.fetchAppliedJobs());
+    await _appliedFuture;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Applied jobs will appear here',
-        style: TextStyle(fontSize: 16),
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _appliedFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+            );
+          }
+
+          final apps = snapshot.data ?? [];
+          if (apps.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: Text('You have not applied to any jobs yet')),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: apps.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final app = apps[index];
+              final jobMap = app['job'] is Map ? Map<String, dynamic>.from(app['job']) : null;
+              final title = jobMap != null ? (jobMap['title'] ?? 'Job') : (app['job_title'] ?? 'Job');
+              final status = (app['status'] ?? app['STATUS'] ?? 'pending').toString();
+              final appliedAt = app['created_at'] ?? app['applied_at'] ?? '';
+              final dateStr = _formatDate(appliedAt);
+
+              return Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    // If we have job details, open job dialog by constructing a Job
+                    if (jobMap != null && jobMap['id'] != null) {
+                      final jobObj = Job.fromJson(jobMap);
+                      _showJobDetails(context, jobObj, onApplied: _refresh, showApply: false);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Job details unavailable')));
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(child: Icon(Icons.work)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(title.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 6),
+                              if (dateStr.isNotEmpty) Text(dateStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: status.toLowerCase() == 'pending' ? Colors.orange[50] : (status.toLowerCase() == 'accepted' ? Colors.green[50] : Colors.red[50]),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(status.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -388,7 +488,7 @@ Drawer _buildDrawer(BuildContext context) {
 }
 
 // ! MARK: Job Details
-Future<void> _showJobDetails(BuildContext context, Job job, {VoidCallback? onApplied}) async {
+Future<void> _showJobDetails(BuildContext context, Job job, {VoidCallback? onApplied, bool showApply = true}) async {
   final scaffold = ScaffoldMessenger.of(context);
   scaffold.showSnackBar(const SnackBar(content: Text('Loading job details...')));
 
@@ -459,24 +559,26 @@ Future<void> _showJobDetails(BuildContext context, Job job, {VoidCallback? onApp
                         child: const Text('Close'),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          scaffold.showSnackBar(const SnackBar(content: Text('Applying...')));
-                          try {
-                            final res = await ApiService.applyJob(jobId: job.id);
-                            final msg = (res['message'] ?? 'Applied successfully').toString();
-                            scaffold.showSnackBar(SnackBar(content: Text(msg)));
-                            if (onApplied != null) onApplied();
-                          } catch (e) {
-                            scaffold.showSnackBar(SnackBar(content: Text('Apply failed: $e')));
-                          }
-                        },
-                        child: const Text('Apply'),
+                    if (showApply) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            scaffold.showSnackBar(const SnackBar(content: Text('Applying...')));
+                            try {
+                              final res = await ApiService.applyJob(jobId: job.id);
+                              final msg = (res['message'] ?? 'Applied successfully').toString();
+                              scaffold.showSnackBar(SnackBar(content: Text(msg)));
+                              if (onApplied != null) onApplied();
+                            } catch (e) {
+                              scaffold.showSnackBar(SnackBar(content: Text('Apply failed: $e')));
+                            }
+                          },
+                          child: const Text('Apply'),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],

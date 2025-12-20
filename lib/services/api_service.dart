@@ -370,6 +370,27 @@ class ApiService {
     }
   }
 
+  // ! MARK: Fetch applications for current seeker (applied jobs)
+  static Future<List<Map<String, dynamic>>> fetchAppliedJobs() async {
+    final url = Uri.parse('$baseUrl/jobs/applied');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } else {
+      throw Exception('Failed to fetch applied jobs: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ! MARK: Update Application Status (recruiter)
   static Future<Map<String, dynamic>> updateApplicationStatus({
     required int applicationId,
