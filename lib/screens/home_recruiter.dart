@@ -64,73 +64,110 @@ void _showApplicantDetails(BuildContext context, Map<String, dynamic> applicant,
       bool loading = false;
       return StatefulBuilder(builder: (ctx2, setState) {
         return AlertDialog(
-          title: Text(name.toString()),
+          contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (email.toString().isNotEmpty) Text('Email: ${email.toString()}'),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProfileAvatar(seeker),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name.toString(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        if (email.toString().isNotEmpty) Text(email.toString(), style: const TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 8),
+                        Text(jobTitle.toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Chip(
+                    label: Text(status, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    backgroundColor: status.toLowerCase() == 'pending' ? Colors.orange[50] : (status.toLowerCase() == 'accepted' ? Colors.green[50] : Colors.red[50]),
+                  ),
+                  const Spacer(),
+                  if (dateStr.isNotEmpty) Text(dateStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(),
               const SizedBox(height: 8),
-              Text('Job: $jobTitle'),
-              const SizedBox(height: 8),
-              Text('Status: $status'),
-              if (dateStr.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text('Applied at: $dateStr'),
-              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Contact pressed'))),
+                    child: const Text('Contact'),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: loading
+                          ? null
+                          : () async {
+                              final aid = applicant['id'] ?? applicant['application_id'] ?? applicant['app_id'];
+                              final appId = aid is int ? aid : int.tryParse(aid?.toString() ?? '') ?? 0;
+                              if (appId == 0) {
+                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Invalid application id')));
+                                return;
+                              }
+                              setState(() => loading = true);
+                              try {
+                                await ApiService.updateApplicationStatus(applicationId: appId, status: 'rejected');
+                                Navigator.pop(ctx2);
+                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Application rejected')));
+                                if (onUpdated != null) onUpdated();
+                              } catch (e) {
+                                ScaffoldMessenger.of(ctx2).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                              } finally {
+                                setState(() => loading = false);
+                              }
+                            },
+                      child: const Text('Reject', style: TextStyle(color: Colors.red)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      onPressed: loading
+                          ? null
+                          : () async {
+                              final aid = applicant['id'] ?? applicant['application_id'] ?? applicant['app_id'];
+                              final appId = aid is int ? aid : int.tryParse(aid?.toString() ?? '') ?? 0;
+                              if (appId == 0) {
+                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Invalid application id')));
+                                return;
+                              }
+                              setState(() => loading = true);
+                              try {
+                                await ApiService.updateApplicationStatus(applicationId: appId, status: 'accepted');
+                                Navigator.pop(ctx2);
+                                ScaffoldMessenger.of(ctx2).showSnackBar(const SnackBar(content: Text('Application accepted')));
+                                if (onUpdated != null) onUpdated();
+                              } catch (e) {
+                                ScaffoldMessenger.of(ctx2).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                              } finally {
+                                setState(() => loading = false);
+                              }
+                            },
+                      child: loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Accept'),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx2), child: const Text('Close')),
-            if (!loading) ...[
-              TextButton(
-                onPressed: () async {
-                  final aid = applicant['id'] ?? applicant['application_id'] ?? applicant['app_id'];
-                  final appId = aid is int ? aid : int.tryParse(aid?.toString() ?? '') ?? 0;
-                  if (appId == 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid application id')));
-                    return;
-                  }
-                  setState(() => loading = true);
-                  try {
-                    await ApiService.updateApplicationStatus(applicationId: appId, status: 'accepted');
-                    Navigator.pop(ctx2);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application accepted')));
-                    if (onUpdated != null) onUpdated();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                  } finally {
-                    setState(() => loading = false);
-                  }
-                },
-                child: const Text('Accept'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  final aid = applicant['id'] ?? applicant['application_id'] ?? applicant['app_id'];
-                  final appId = aid is int ? aid : int.tryParse(aid?.toString() ?? '') ?? 0;
-                  if (appId == 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid application id')));
-                    return;
-                  }
-                  setState(() => loading = true);
-                  try {
-                    await ApiService.updateApplicationStatus(applicationId: appId, status: 'rejected');
-                    Navigator.pop(ctx2);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected')));
-                    if (onUpdated != null) onUpdated();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                  } finally {
-                    setState(() => loading = false);
-                  }
-                },
-                child: const Text('Reject'),
-              ),
-            ] else ...[
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
-            ]
-          ],
         );
       });
     },
@@ -571,10 +608,26 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: jobs.length,
-            itemBuilder: (context, index) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('Your Posted Jobs', style: Theme.of(context).textTheme.titleLarge)),
+                    IconButton(
+                      tooltip: 'Refresh',
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _refresh,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: jobs.length,
+                  itemBuilder: (context, index) {
               final job = jobs[index];
               final id = job['id'] ?? 0;
               final title = job['title'] ?? 'Untitled';
@@ -586,7 +639,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
               final appsCount =
                   job['applications_count'] ?? job['applications'] ?? 0;
 
-              return Card(
+                  return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 elevation: 2,
                 child: ListTile(
@@ -629,45 +682,20 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                       ),
                     ],
                   ),
-                  onTap: () => _showJobOptions(context, id, title),
+                  onTap: () => _showApplicantsDialog(context, id, title),
                 ),
               );
             },
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  void _showJobOptions(BuildContext context, int jobId, String title) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.person_search),
-                title: const Text('View Applicants'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showApplicantsDialog(context, jobId, title);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.refresh),
-                title: const Text('Refresh List'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _refresh();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // _showJobOptions removed — jobs now open applicants directly on tap
 
   void _showApplicantsDialog(
     BuildContext context,
@@ -706,11 +734,6 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                         final name = seeker is Map
                             ? (seeker['name'] ?? seeker['email'] ?? 'Seeker')
                             : 'Seeker';
-                        final email = seeker is Map
-                            ? (seeker['email'] ?? '')
-                            : '';
-                        final status = (a['STATUS'] ?? a['status'] ?? 'pending')
-                            .toString();
                         final appliedAt =
                             a['applied_at'] ?? a['created_at'] ?? '';
                         final dateStr = _formatDate(appliedAt);
@@ -720,27 +743,29 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: ListTile(
-                            title: Text(name.toString()),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (email.toString().isNotEmpty)
-                                  Text(email.toString()),
-                                if (dateStr.isNotEmpty)
-                                  Text(
-                                    dateStr,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _showApplicantDetails(context, a, onUpdated: () => _refresh());
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              child: Row(
+                                children: [
+                                  _buildProfileAvatar(seeker),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(name.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 6),
+                                        if (dateStr.isNotEmpty) Text(dateStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                      ],
                                     ),
                                   ),
-                              ],
-                            ),
-                            trailing: Text(
-                              status,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                                ],
                               ),
                             ),
                           ),
