@@ -28,8 +28,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     setState(() => _loading = true);
     final scaffold = ScaffoldMessenger.of(context);
     try {
-      final res = await ApiService.resetPassword(email: widget.email, password: _passwordCtrl.text, passwordConfirmation: _confirmCtrl.text);
-      scaffold.showSnackBar(SnackBar(content: Text(res['message']?.toString() ?? 'Password updated')));
+      final res = await ApiService.resetPassword(
+        email: widget.email,
+        password: _passwordCtrl.text,
+        passwordConfirmation: _confirmCtrl.text,
+      );
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(res['message']?.toString() ?? 'Password updated'),
+        ),
+      );
       if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       scaffold.showSnackBar(SnackBar(content: Text('Failed: $e')));
@@ -53,7 +61,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Reset password for ${widget.email}', style: const TextStyle(fontSize: 16)),
+                    Text(
+                      'Reset password for ${widget.email}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     const SizedBox(height: 12),
                     Form(
                       key: _formKey,
@@ -62,9 +73,21 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           TextFormField(
                             controller: _passwordCtrl,
                             obscureText: _obscure,
-                            decoration: InputDecoration(labelText: 'New Password', suffixIcon: IconButton(icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _obscure = !_obscure))),
+                            decoration: InputDecoration(
+                              labelText: 'New Password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscure
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _obscure = !_obscure),
+                              ),
+                            ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Enter password';
+                              if (v == null || v.isEmpty)
+                                return 'Enter password';
                               if (v.length < 6) return 'Password too short';
                               return null;
                             },
@@ -73,23 +96,48 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           TextFormField(
                             controller: _confirmCtrl,
                             obscureText: _obscure,
-                            decoration: InputDecoration(labelText: 'Confirm Password', suffixIcon: IconButton(icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _obscure = !_obscure))),
+                            decoration: InputDecoration(
+                              labelText: 'Confirm Password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscure
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _obscure = !_obscure),
+                              ),
+                            ),
                             validator: (v) {
-                              if (v == null || v.isEmpty) return 'Confirm password';
-                              if (v != _passwordCtrl.text) return 'Passwords do not match';
+                              if (v == null || v.isEmpty)
+                                return 'Confirm password';
+                              if (v != _passwordCtrl.text)
+                                return 'Passwords do not match';
                               return null;
                             },
                           ),
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: _loading ? null : _submit,
                                   child: _loading
-                                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
                                       : const Text('Reset Password'),
                                 ),
                               ),

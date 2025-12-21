@@ -52,13 +52,15 @@ class _SignInPageState extends State<SignInPage> {
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeSeekerPage(email: _emailController.text.trim())),
+          MaterialPageRoute(
+            builder: (_) => HomeSeekerPage(email: _emailController.text.trim()),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
     } finally {
       setState(() {
         _loading = false;
@@ -175,13 +177,23 @@ class _SignInPageState extends State<SignInPage> {
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock, color: Colors.blue),
+                              prefixIcon: const Icon(
+                                Icons.lock,
+                                color: Colors.blue,
+                              ),
                               focusedBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.blue),
                               ),
                               suffixIcon: IconButton(
-                                icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.blue),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.blue,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                               ),
                             ),
                             validator: (v) {
@@ -215,7 +227,12 @@ class _SignInPageState extends State<SignInPage> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordPage()));
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ForgotPasswordPage(),
+                                    ),
+                                  );
                                 },
                                 child: const Text(
                                   'Forget Password?',
@@ -265,4 +282,3 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 }
-

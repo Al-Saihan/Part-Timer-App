@@ -50,7 +50,9 @@ class _SignUpPageState extends State<SignUpPage> {
       // On successful registration, navigate to SignInPage
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful! Please sign in.')),
+          const SnackBar(
+            content: Text('Registration successful! Please sign in.'),
+          ),
         );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const SignInPage()),
@@ -58,9 +60,9 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Registration failed: $e')));
       }
     } finally {
       if (mounted) {
@@ -312,8 +314,15 @@ class _SignUpPageState extends State<SignUpPage> {
                                   decoration: InputDecoration(
                                     labelText: 'Password',
                                     suffixIcon: IconButton(
-                                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
                                     ),
                                   ),
                                   validator: (v) {

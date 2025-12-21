@@ -25,12 +25,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() => _loading = true);
     final scaffold = ScaffoldMessenger.of(context);
     try {
-      final res = await ApiService.forgotPassword(email: _emailCtrl.text.trim());
-      scaffold.showSnackBar(SnackBar(content: Text(res['message']?.toString() ?? 'Email verified')));
+      final res = await ApiService.forgotPassword(
+        email: _emailCtrl.text.trim(),
+      );
+      scaffold.showSnackBar(
+        SnackBar(content: Text(res['message']?.toString() ?? 'Email verified')),
+      );
       // navigate to reset page
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ResetPasswordPage(email: _emailCtrl.text.trim())),
+          MaterialPageRoute(
+            builder: (_) => ResetPasswordPage(email: _emailCtrl.text.trim()),
+          ),
         );
       }
     } catch (e) {
@@ -55,7 +61,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Enter your email to reset password', style: TextStyle(fontSize: 16)),
+                    const Text(
+                      'Enter your email to reset password',
+                      style: TextStyle(fontSize: 16),
+                    ),
                     const SizedBox(height: 12),
                     Form(
                       key: _formKey,
@@ -64,7 +73,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(labelText: 'Email'),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Enter email';
+                          if (v == null || v.trim().isEmpty)
+                            return 'Enter email';
                           if (!v.contains('@')) return 'Enter a valid email';
                           return null;
                         },
@@ -74,13 +84,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _loading ? null : _submit,
-                            child: _loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Next'),
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Next'),
                           ),
                         ),
                       ],

@@ -132,7 +132,9 @@ class ApiService {
   }
 
   // ! MARK: Fetch single job details
-  static Future<Map<String, dynamic>> fetchJobDetails({required int jobId}) async {
+  static Future<Map<String, dynamic>> fetchJobDetails({
+    required int jobId,
+  }) async {
     final url = Uri.parse('$baseUrl/jobs/$jobId');
     final token = await getToken();
 
@@ -149,7 +151,9 @@ class ApiService {
       if (parsed is Map<String, dynamic>) return parsed;
       throw Exception('Unexpected job details format');
     } else {
-      throw Exception('Failed to fetch job details: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to fetch job details: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -293,7 +297,9 @@ class ApiService {
     final recruiterId = await getUserId();
 
     if (recruiterId == null) {
-      throw Exception('Missing recruiter_id: cannot create job without a recruiter id.');
+      throw Exception(
+        'Missing recruiter_id: cannot create job without a recruiter id.',
+      );
     }
 
     final headers = {
@@ -321,7 +327,9 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return parsed is Map<String, dynamic> ? parsed : {'success': true};
       } else {
-        throw Exception('Failed to create job: ${response.statusCode} ${response.body}');
+        throw Exception(
+          'Failed to create job: ${response.statusCode} ${response.body}',
+        );
       }
     } catch (e) {
       throw Exception('Failed to create job: $e');
@@ -343,9 +351,13 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+      return data
+          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+          .toList();
     } else {
-      throw Exception('Failed to fetch posted jobs: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to fetch posted jobs: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -364,9 +376,13 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+      return data
+          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+          .toList();
     } else {
-      throw Exception('Failed to fetch applicants: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to fetch applicants: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -385,9 +401,13 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+      return data
+          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+          .toList();
     } else {
-      throw Exception('Failed to fetch applied jobs: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to fetch applied jobs: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -416,14 +436,21 @@ class ApiService {
         return {'success': true};
       }
     } else {
-      throw Exception('Failed to update status: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to update status: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
   // ! MARK: Forgot password (verify email exists)
-  static Future<Map<String, dynamic>> forgotPassword({required String email}) async {
+  static Future<Map<String, dynamic>> forgotPassword({
+    required String email,
+  }) async {
     final url = Uri.parse('$baseUrl/password/forgot');
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     final body = jsonEncode({'email': email});
 
     final response = await http.post(url, headers: headers, body: body);
@@ -431,22 +458,37 @@ class ApiService {
       final parsed = jsonDecode(response.body);
       return parsed is Map<String, dynamic> ? parsed : {'message': 'OK'};
     } else {
-      throw Exception('Failed to verify email: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to verify email: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
   // ! MARK: Reset password (change password by email)
-  static Future<Map<String, dynamic>> resetPassword({required String email, required String password, required String passwordConfirmation}) async {
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
     final url = Uri.parse('$baseUrl/password/reset');
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
-    final body = jsonEncode({'email': email, 'password': password, 'password_confirmation': passwordConfirmation});
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final body = jsonEncode({
+      'email': email,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
 
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
       return parsed is Map<String, dynamic> ? parsed : {'message': 'OK'};
     } else {
-      throw Exception('Failed to reset password: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to reset password: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -454,7 +496,10 @@ class ApiService {
   static Future<Map<String, dynamic>> updateBio({required String? bio}) async {
     final url = Uri.parse('$baseUrl/user/bio');
     final token = await getToken();
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     final body = jsonEncode({'bio': bio});
 
@@ -463,15 +508,22 @@ class ApiService {
       final parsed = jsonDecode(response.body);
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
-      throw Exception('Failed to update bio: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to update bio: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
   // ! MARK: Update user skills
-  static Future<Map<String, dynamic>> updateSkills({required String? skills}) async {
+  static Future<Map<String, dynamic>> updateSkills({
+    required String? skills,
+  }) async {
     final url = Uri.parse('$baseUrl/user/skills');
     final token = await getToken();
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     final body = jsonEncode({'skills': skills});
 
@@ -480,15 +532,22 @@ class ApiService {
       final parsed = jsonDecode(response.body);
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
-      throw Exception('Failed to update skills: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to update skills: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
   // ! MARK: Update user location
-  static Future<Map<String, dynamic>> updateLocation({required String? location}) async {
+  static Future<Map<String, dynamic>> updateLocation({
+    required String? location,
+  }) async {
     final url = Uri.parse('$baseUrl/user/location');
     final token = await getToken();
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     final body = jsonEncode({'location': location});
 
@@ -497,15 +556,22 @@ class ApiService {
       final parsed = jsonDecode(response.body);
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
-      throw Exception('Failed to update location: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to update location: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
   // ! MARK: Update user profile picture (select from predefined avatars)
-  static Future<Map<String, dynamic>> updateProfilePic({required String profilePic}) async {
+  static Future<Map<String, dynamic>> updateProfilePic({
+    required String profilePic,
+  }) async {
     final url = Uri.parse('$baseUrl/user/profile-pic');
     final token = await getToken();
-    final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     final body = jsonEncode({'profile_pic': profilePic});
 
@@ -514,7 +580,9 @@ class ApiService {
       final parsed = jsonDecode(response.body);
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
-      throw Exception('Failed to update profile picture: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to update profile picture: ${response.statusCode} ${response.body}',
+      );
     }
   }
 }
