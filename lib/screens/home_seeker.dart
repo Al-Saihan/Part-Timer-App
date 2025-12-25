@@ -42,24 +42,24 @@ String _formatDate(dynamic raw) {
   }
 }
 
-Widget _buildProfileAvatar(Map<String, dynamic>? user) {
+Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
   // Prefer using `profile_pic` (asset name) when present
   if (user != null) {
     final profilePic = user['profile_pic']?.toString();
     if (profilePic != null && profilePic.isNotEmpty) {
       final assetPath = 'assets/avatars/$profilePic.png';
       return CircleAvatar(
-        radius: 40,
+        radius: radius,
         backgroundColor: Colors.grey[200],
         child: ClipOval(
           child: Image.asset(
             assetPath,
             fit: BoxFit.cover,
-            width: 70,
-            height: 70,
-            errorBuilder: (c, e, s) => const CircleAvatar(
-              radius: 30,
-              child: Icon(Icons.person, size: 35),
+            width: radius * 1.75,
+            height: radius * 1.75,
+            errorBuilder: (c, e, s) => CircleAvatar(
+              radius: radius * 0.75,
+              child: const Icon(Icons.person, size: 18),
             ),
           ),
         ),
@@ -79,7 +79,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user) {
   }
 
   if (img == null || img.isEmpty) {
-    return const CircleAvatar(radius: 30, child: Icon(Icons.person, size: 35));
+    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 18));
   }
 
   String url = img;
@@ -91,7 +91,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user) {
   } catch (_) {}
 
   return CircleAvatar(
-    radius: 40,
+    radius: radius,
     backgroundColor: Colors.grey[200],
     backgroundImage: NetworkImage(url),
     child: const SizedBox.shrink(),
@@ -297,7 +297,8 @@ class _HomeTabState extends State<HomeTab> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: 2,
-                    child: ListTile(
+                      child: ListTile(
+                        leading: job.recruiter != null ? _buildProfileAvatar(job.recruiter, radius: 20) : const CircleAvatar(child: Icon(Icons.work)),
                       onTap: () =>
                           _showJobDetails(context, job, onApplied: _refresh),
                       title: Text(
@@ -306,27 +307,80 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text('${job.workingHours} hrs/day'),
-                            const Spacer(),
-                            Icon(
-                              Icons.payments,
-                              size: 16,
-                              color: Colors.green[700],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${job.payment} Taka per hour',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+                            // Show recruiter name and rating when available
+                            if (job.recruiter != null) 
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6.0),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.person, size: 16, color: Colors.grey),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        (job.recruiter?['name'] ?? job.recruiter?['full_name'] ?? job.recruiter?['username'] ?? 'Recruiter').toString(),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                      ),
+                                    ),
+                                    if (job.recruiter?['avg_rating'] != null) ...[
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.star, size: 14, color: Colors.amber),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${job.recruiter?['avg_rating'].toString()}${job.recruiter?['rating_count'] != null ? ' (${job.recruiter?['rating_count']})' : ''}',
+                                        style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                      ),
+                                    ],
+                                  ],
+                                ),
                               ),
+                            if (job.location != null && job.location!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6.0),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        job.location!,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(color: Colors.black87),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text('${job.workingHours} hrs/day'),
+                                const Spacer(),
+                                Icon(
+                                  Icons.payments,
+                                  size: 16,
+                                  color: Colors.green[700],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${job.payment} Taka per hour',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -1066,6 +1120,21 @@ Future<void> _showJobDetails(
           '',
     );
   }
+  // Extract recruiter and job location when details available —
+  // fall back to values parsed from the Job model when details endpoint
+  // doesn't include them (the /api/jobs list now returns recruiter/location).
+  Map<String, dynamic>? recruiter;
+  String jobLocation = '';
+  if (details != null) {
+    if (details['recruiter'] is Map) {
+      recruiter = Map<String, dynamic>.from(details['recruiter']);
+    }
+    jobLocation = details['location']?.toString() ?? details['job_location']?.toString() ?? (job.location ?? '');
+  } else {
+    // No details payload — use values from the Job object if present
+    jobLocation = job.location ?? '';
+    if (job.recruiter != null) recruiter = job.recruiter;
+  }
 
   final title = details != null ? (details['title'] ?? job.title) : job.title;
   final description = details != null
@@ -1095,28 +1164,85 @@ Future<void> _showJobDetails(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header: title (no recruiter profile shown)
-                Column(
+                // Header: title, location, date and recruiter summary
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    _buildProfileAvatar(recruiter ?? job.recruiter),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              if (jobLocation.isNotEmpty)
+                                Expanded(
+                                  child: Text(jobLocation,
+                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                              if (createdStr.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Text(
+                                  createdStr,
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (recruiter != null)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    (recruiter['name'] ?? recruiter['full_name'] ?? recruiter['email'] ?? 'Recruiter').toString(),
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if ((recruiter['avg_rating'] ?? recruiter['rating'] ?? recruiter['avgRating']) != null) ...[
+                                  const Icon(Icons.star, size: 14, color: Colors.amber),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    (recruiter['avg_rating'] ?? recruiter['rating'] ?? recruiter['avgRating']).toString(),
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '(${(recruiter['rating_count'] ?? recruiter['ratingCount'] ?? 0).toString()})',
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+                              ],
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    if (createdStr.isNotEmpty)
-                      Text(
-                        createdStr,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                if (recruiter != null && (recruiter['bio'] ?? '').toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: Text(
+                      (recruiter['bio'] ?? '').toString(),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                const Divider(),
                 const SizedBox(height: 12),
 
                 // Description
@@ -1139,7 +1265,7 @@ Future<void> _showJobDetails(
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
+                      child: TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Close'),
                       ),
@@ -1147,7 +1273,9 @@ Future<void> _showJobDetails(
                     if (showApply) ...[
                       const SizedBox(width: 12),
                       Expanded(
-                        child: ElevatedButton(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.send),
+                          label: const Text('Apply'),
                           onPressed: () async {
                             Navigator.pop(context);
                             scaffold.showSnackBar(
@@ -1170,7 +1298,6 @@ Future<void> _showJobDetails(
                               );
                             }
                           },
-                          child: const Text('Apply'),
                         ),
                       ),
                     ],

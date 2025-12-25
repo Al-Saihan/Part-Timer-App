@@ -276,24 +276,24 @@ void _showApplicantDetails(
   );
 }
 
-Widget _buildProfileAvatar(Map<String, dynamic>? user) {
+Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
   // Prefer using `profile_pic` (asset name) when present
   if (user != null) {
     final profilePic = user['profile_pic']?.toString();
     if (profilePic != null && profilePic.isNotEmpty) {
       final assetPath = 'assets/avatars/$profilePic.png';
       return CircleAvatar(
-        radius: 40,
+        radius: radius,
         backgroundColor: Colors.grey[200],
         child: ClipOval(
           child: Image.asset(
             assetPath,
             fit: BoxFit.cover,
-            width: 80,
-            height: 80,
-            errorBuilder: (c, e, s) => const CircleAvatar(
-              radius: 30,
-              child: Icon(Icons.person, size: 35),
+            width: radius * 2,
+            height: radius * 2,
+            errorBuilder: (c, e, s) => CircleAvatar(
+              radius: radius * 0.75,
+              child: const Icon(Icons.person, size: 18),
             ),
           ),
         ),
@@ -313,7 +313,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user) {
   }
 
   if (img == null || img.isEmpty) {
-    return const CircleAvatar(radius: 30, child: Icon(Icons.person, size: 35));
+    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 18));
   }
 
   String url = img;
@@ -325,7 +325,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user) {
   } catch (_) {}
 
   return CircleAvatar(
-    radius: 40,
+    radius: radius,
     backgroundColor: Colors.grey[200],
     backgroundImage: NetworkImage(url),
     child: const SizedBox.shrink(),
@@ -778,37 +778,67 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
                       child: ListTile(
+                        leading: (job['recruiter'] is Map) ? _buildProfileAvatar(Map<String,dynamic>.from(job['recruiter']), radius: 20) : const CircleAvatar(child: Icon(Icons.work)),
                         title: Text(
                           title,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.schedule,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
-                              Text('$workingHours hrs/day'),
-                              const Spacer(),
-                              Icon(
-                                Icons.payments,
-                                size: 16,
-                                color: Colors.green[700],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '$payment per hour',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if ((job['location'] ?? job['locations']) != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 6.0),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          size: 16,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            (job['location'] is String)
+                                                ? job['location']
+                                                : (job['locations'] is List)
+                                                    ? (job['locations'] as List).join(', ')
+                                                    : job['location']?.toString() ?? '',
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.schedule,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text('$workingHours hrs/day'),
+                                    const Spacer(),
+                                    Icon(
+                                      Icons.payments,
+                                      size: 16,
+                                      color: Colors.green[700],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '$payment per hour',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -1424,6 +1454,7 @@ void _showAddJobDialog(BuildContext context) {
   final descCtrl = TextEditingController();
   final hoursCtrl = TextEditingController();
   final paymentCtrl = TextEditingController();
+  final locationCtrl = TextEditingController();
   String selectedDifficulty = 'easy';
   bool isLoading = false;
 
@@ -1468,21 +1499,19 @@ void _showAddJobDialog(BuildContext context) {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 12),
-                    DropdownButton<String>(
-                      value: selectedDifficulty,
-                      isExpanded: true,
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedDifficulty,
+                      decoration: const InputDecoration(
+                        labelText: 'Difficulty',
+                        border: OutlineInputBorder(),
+                      ),
                       items: const [
                         DropdownMenuItem(value: 'easy', child: Text('Easy')),
-                        DropdownMenuItem(
-                          value: 'medium',
-                          child: Text('Medium'),
-                        ),
+                        DropdownMenuItem(value: 'medium', child: Text('Medium')),
                         DropdownMenuItem(value: 'hard', child: Text('Hard')),
                       ],
                       onChanged: (val) {
-                        if (val != null) {
-                          setState(() => selectedDifficulty = val);
-                        }
+                        if (val != null) setState(() => selectedDifficulty = val);
                       },
                     ),
                     const SizedBox(height: 12),
@@ -1500,6 +1529,15 @@ void _showAddJobDialog(BuildContext context) {
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: 'Payment per Hour',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: locationCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Location (optional)',
+                        hintText: 'City, address or remote',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -1532,21 +1570,22 @@ void _showAddJobDialog(BuildContext context) {
                                           ) ??
                                           0;
 
-                                      if (title.isEmpty ||
-                                          desc.isEmpty ||
-                                          hours <= 0 ||
-                                          payment <= 0) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Please fill all fields correctly',
+                                        if (title.isEmpty ||
+                                            desc.isEmpty ||
+                                            hours <= 0 ||
+                                            payment <= 0) {
+                                          setState(() => isLoading = false);
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Please fill all fields correctly',
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                        return;
-                                      }
+                                          );
+                                          return;
+                                        }
 
                                       final res = await ApiService.createJob(
                                         title: title,
@@ -1554,6 +1593,9 @@ void _showAddJobDialog(BuildContext context) {
                                         difficulty: selectedDifficulty,
                                         workingHours: hours,
                                         payment: payment,
+                                        location: locationCtrl.text.trim().isEmpty
+                                            ? null
+                                            : locationCtrl.text.trim(),
                                       );
 
                                       Navigator.pop(context);
