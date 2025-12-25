@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../models/job.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
+import 'ratings_screen.dart';
 
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
@@ -1041,21 +1042,50 @@ Drawer _buildDrawer(BuildContext context) {
             style: TextStyle(color: Colors.white, fontSize: 24),
           ),
         ),
-        ListTile(
-          leading: const Icon(Icons.home),
-          title: const Text('Button 1'),
-          onTap: () => Navigator.pop(context),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text('Ratings', style: Theme.of(context).textTheme.titleSmall),
         ),
+
         ListTile(
-          leading: const Icon(Icons.work),
-          title: const Text('Button 2'),
-          onTap: () => Navigator.pop(context),
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.how_to_vote, color: Colors.indigo),
+          title: const Text('Eligible'),
+          subtitle: const Text('People you can rate'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 0)));
+          },
+          trailing: const Icon(Icons.chevron_right),
         ),
+
         ListTile(
-          leading: const Icon(Icons.person),
-          title: const Text('Button 3'),
-          onTap: () => Navigator.pop(context),
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.rate_review, color: Colors.green),
+          title: const Text('My Ratings'),
+          subtitle: const Text('Ratings you created'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 1)));
+          },
+          trailing: const Icon(Icons.chevron_right),
         ),
+
+        ListTile(
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.reviews, color: Colors.orange),
+          title: const Text('About Me'),
+          subtitle: const Text('Ratings written about you'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 2)));
+          },
+          trailing: const Icon(Icons.chevron_right),
+        ),
+
         const Divider(),
 
         // ! MARK: Logout

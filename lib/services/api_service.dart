@@ -380,6 +380,116 @@ class ApiService {
     }
   }
 
+  // ! MARK: Submit Rating
+  static Future<Map<String, dynamic>> submitRating({
+    required int ratedUserId,
+    required int jobId,
+    required int rating,
+    String? review,
+  }) async {
+    final url = Uri.parse('$baseUrl/ratings');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final body = jsonEncode({
+      'rated_user_id': ratedUserId,
+      'job_id': jobId,
+      'rating': rating,
+      'review': review,
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      try {
+        final parsed = jsonDecode(response.body);
+        return parsed is Map<String, dynamic> ? parsed : {'success': true};
+      } catch (_) {
+        return {'success': true};
+      }
+    } else {
+      throw Exception('Failed to submit rating: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Fetch eligible rating candidates for authenticated user
+  static Future<List<Map<String, dynamic>>> fetchEligibleRatings() async {
+    final url = Uri.parse('$baseUrl/ratings/eligible');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      try {
+        debugPrint('fetchEligibleRatings returning: ${jsonEncode(data)}');
+      } catch (_) {
+        debugPrint('fetchEligibleRatings returning ${data.length} items');
+      }
+      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthenticated (401)');
+    } else {
+      throw Exception('Failed to fetch eligible ratings: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Fetch ratings created by authenticated user
+  static Future<List<Map<String, dynamic>>> fetchMyRatings() async {
+    final url = Uri.parse('$baseUrl/ratings/mine');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      try {
+        debugPrint('fetchMyRatings returning: ${jsonEncode(data)}');
+      } catch (_) {}
+      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } else {
+      throw Exception('Failed to fetch my ratings: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ! MARK: Fetch ratings about authenticated user
+  static Future<List<Map<String, dynamic>>> fetchRatingsAboutMe() async {
+    final url = Uri.parse('$baseUrl/ratings/about-me');
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      try {
+        debugPrint('fetchRatingsAboutMe returning: ${jsonEncode(data)}');
+      } catch (_) {}
+      return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } else {
+      throw Exception('Failed to fetch ratings about me: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ! MARK: CREATE JOB (recruiter)
   static Future<Map<String, dynamic>> createJob({
     required String title,

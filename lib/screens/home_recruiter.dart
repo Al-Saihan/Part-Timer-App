@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
+import 'ratings_screen.dart';
 
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
@@ -1501,57 +1502,122 @@ Drawer _buildDrawer(BuildContext context) {
     child: ListView(
       padding: EdgeInsets.zero,
       children: [
-        const DrawerHeader(
-          decoration: BoxDecoration(color: Color.fromARGB(255, 111, 146, 175)),
-          child: Text(
-            'Quick Settings',
-            style: TextStyle(color: Colors.white, fontSize: 24),
+        DrawerHeader(
+          decoration: const BoxDecoration(color: Color.fromARGB(255, 111, 146, 175)),
+          child: FutureBuilder<Map<String, dynamic>?>(
+            future: ApiService.fetchCurrentUser(),
+            builder: (ctx, snap) {
+              final user = snap.data;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildProfileAvatar(user, radius: 36),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user == null ? 'Recruiter' : (user['name']?.toString() ?? 'Recruiter'),
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user == null ? '' : (user['email']?.toString() ?? ''),
+                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Quick actions', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
-        ListTile(
-          leading: const Icon(Icons.home),
-          title: const Text('Button 1'),
-          onTap: () => Navigator.pop(context),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text('Ratings', style: Theme.of(context).textTheme.titleSmall),
         ),
+
         ListTile(
-          leading: const Icon(Icons.work),
-          title: const Text('Button 2'),
-          onTap: () => Navigator.pop(context),
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.how_to_vote, color: Colors.indigo),
+          title: const Text('Eligible'),
+          subtitle: const Text('People you can rate'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 0)));
+          },
+          trailing: const Icon(Icons.chevron_right),
         ),
+
         ListTile(
-          leading: const Icon(Icons.person),
-          title: const Text('Button 3'),
-          onTap: () => Navigator.pop(context),
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.rate_review, color: Colors.green),
+          title: const Text('My Ratings'),
+          subtitle: const Text('Ratings you created'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 1)));
+          },
+          trailing: const Icon(Icons.chevron_right),
         ),
-        const Divider(),
-        // ! MARK: Logout
+
         ListTile(
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.reviews, color: Colors.orange),
+          title: const Text('About Me'),
+          subtitle: const Text('Ratings written about you'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 2)));
+          },
+          trailing: const Icon(Icons.chevron_right),
+        ),
+
+        const Divider(height: 18, thickness: 1),
+
+        ListTile(
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text('Logout', style: TextStyle(color: Colors.red)),
+          subtitle: const Text('Sign out from the app'),
           onTap: () async {
             Navigator.pop(context); // close drawer
 
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Logging out...')));
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logging out...')));
 
             try {
               await ApiService.logout();
             } catch (e) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Logout API failed: $e')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout API failed: $e')));
             } finally {
               await clearToken();
               if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const SignInPage()),
-                  (route) => false,
-                );
+                Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const SignInPage()), (route) => false);
               }
             }
           },
         ),
+
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text('App version: 1.0.0', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        ),
+        const SizedBox(height: 12),
       ],
     ),
   );
