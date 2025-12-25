@@ -31,7 +31,9 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final parsed = jsonDecode(response.body);
+      debugPrint('register returning: ${jsonEncode(parsed)}');
+      return parsed;
     } else {
       throw Exception(
         'Failed to register: ${response.statusCode} ${response.body}',
@@ -54,6 +56,11 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
+      try {
+        debugPrint('login returning: ${jsonEncode(body)}');
+      } catch (_) {
+        debugPrint('login returning (unencodable): $body');
+      }
 
       // Try to detect token and user id in common response shapes and save them
       try {
@@ -122,8 +129,77 @@ class ApiService {
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((job) => Job.fromJson(job)).toList();
+      final decoded = jsonDecode(response.body);
+      final List<Map<String, dynamic>> normalized = [];
+
+      try {
+        if (decoded is List) {
+          for (var item in decoded) {
+            if (item is Map) {
+              Map<String, dynamic> jobMap;
+              if (item.containsKey('job')) {
+                jobMap = Map<String, dynamic>.from(item['job']);
+                if (item.containsKey('recruiter') && item['recruiter'] != null) {
+                  jobMap['recruiter'] = item['recruiter'];
+                } else if (item.containsKey('user') && item['user'] != null) {
+                  jobMap['recruiter'] = item['user'];
+                }
+              } else {
+                jobMap = Map<String, dynamic>.from(item);
+              }
+              normalized.add(jobMap);
+            }
+          }
+        } else if (decoded is Map) {
+          // Single wrapper or map of id -> wrapper
+          if (decoded.containsKey('job')) {
+            final item = decoded;
+            final Map<String, dynamic> jobMap = Map<String, dynamic>.from(item['job']);
+            if (item.containsKey('recruiter') && item['recruiter'] != null) {
+              jobMap['recruiter'] = item['recruiter'];
+            } else if (item.containsKey('user') && item['user'] != null) {
+              jobMap['recruiter'] = item['user'];
+            }
+            normalized.add(jobMap);
+          } else {
+            for (var value in decoded.values) {
+              if (value is Map) {
+                Map<String, dynamic> jobMap;
+                if (value.containsKey('job')) {
+                  jobMap = Map<String, dynamic>.from(value['job']);
+                  if (value.containsKey('recruiter') && value['recruiter'] != null) {
+                    jobMap['recruiter'] = value['recruiter'];
+                  } else if (value.containsKey('user') && value['user'] != null) {
+                    jobMap['recruiter'] = value['user'];
+                  }
+                } else {
+                  jobMap = Map<String, dynamic>.from(value);
+                }
+                normalized.add(jobMap);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('fetchJobs: normalization error: $e');
+      }
+
+      // Diagnostics for normalized items
+      for (var item in normalized) {
+        try {
+          final id = item['id']?.toString() ?? '<no-id>';
+          final hasRecruiter = item.containsKey('recruiter') ? (item['recruiter'] == null ? 'null' : item['recruiter'].runtimeType.toString()) : 'absent';
+          debugPrint('fetchJobs(normalized): job id=$id recruiter=$hasRecruiter');
+        } catch (_) {}
+      }
+
+      try {
+        debugPrint('fetchJobs returning normalized ${jsonEncode(normalized)}');
+      } catch (_) {
+        debugPrint('fetchJobs returning ${normalized.length} normalized items');
+      }
+
+      return normalized.map((job) => Job.fromJson(job)).toList();
     } else {
       throw Exception(
         'Failed to fetch jobs: ${response.statusCode} ${response.body}',
@@ -148,7 +224,15 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
-      if (parsed is Map<String, dynamic>) return parsed;
+      debugPrint('fetchJobDetails: parsed=$parsed');
+      if (parsed is Map<String, dynamic>) {
+        try {
+          debugPrint('fetchJobDetails returning: ${jsonEncode(parsed)}');
+        } catch (_) {
+          debugPrint('fetchJobDetails returning (non-encodable): $parsed');
+        }
+        return parsed;
+      }
       throw Exception('Unexpected job details format');
     } else {
       throw Exception(
@@ -172,6 +256,7 @@ class ApiService {
     if (response.statusCode == 200) {
       // clear local user id as well
       await clearUserId();
+      debugPrint('logout successful');
       return;
     } else {
       throw Exception(
@@ -196,6 +281,11 @@ class ApiService {
       if (response.statusCode == 200) {
         try {
           final parsed = jsonDecode(response.body);
+          try {
+            debugPrint('_fetchCurrentUser parsed: ${jsonEncode(parsed)}');
+          } catch (_) {
+            debugPrint('_fetchCurrentUser parsed (non-encodable): $parsed');
+          }
           return parsed is Map<String, dynamic> ? parsed : null;
         } catch (_) {
           return null;
@@ -268,7 +358,13 @@ class ApiService {
     }
 
     if (response.statusCode == 200) {
-      return (parsed is Map<String, dynamic>) ? parsed : {'message': 'Applied'};
+      final result = (parsed is Map<String, dynamic>) ? parsed : {'message': 'Applied'};
+      try {
+        debugPrint('applyJob returning: ${jsonEncode(result)}');
+      } catch (_) {
+        debugPrint('applyJob returning (non-encodable): $result');
+      }
+      return result;
     } else {
       // clearer message when HTML redirect returned
       final contentType = response.headers['content-type'] ?? '';
@@ -291,6 +387,7 @@ class ApiService {
     required String difficulty,
     required int workingHours,
     required double payment,
+    String? location,
   }) async {
     final url = Uri.parse('$baseUrl/jobs');
     final token = await getToken();
@@ -315,6 +412,7 @@ class ApiService {
       'difficulty': difficulty,
       'working_hours': workingHours,
       'payment': payment,
+      'location': location,
     });
 
     final response = await http.post(url, headers: headers, body: body);
@@ -325,7 +423,13 @@ class ApiService {
     try {
       final parsed = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return parsed is Map<String, dynamic> ? parsed : {'success': true};
+        final result = parsed is Map<String, dynamic> ? parsed : {'success': true};
+        try {
+          debugPrint('createJob returning: ${jsonEncode(result)}');
+        } catch (_) {
+          debugPrint('createJob returning (non-encodable): $result');
+        }
+        return result;
       } else {
         throw Exception(
           'Failed to create job: ${response.statusCode} ${response.body}',
@@ -351,6 +455,11 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
+      try {
+        debugPrint('fetchPostedJobs returning: ${jsonEncode(data)}');
+      } catch (_) {
+        debugPrint('fetchPostedJobs returning ${data.length} items');
+      }
       return data
           .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
           .toList();
@@ -376,6 +485,11 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
+      try {
+        debugPrint('fetchApplicants returning: ${jsonEncode(data)}');
+      } catch (_) {
+        debugPrint('fetchApplicants returning ${data.length} items');
+      }
       return data
           .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
           .toList();
@@ -401,6 +515,11 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
+      try {
+        debugPrint('fetchAppliedJobs returning: ${jsonEncode(data)}');
+      } catch (_) {
+        debugPrint('fetchAppliedJobs returning ${data.length} items');
+      }
       return data
           .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
           .toList();
@@ -431,8 +550,15 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       try {
         final parsed = jsonDecode(response.body);
-        return parsed is Map<String, dynamic> ? parsed : {'success': true};
+        final result = parsed is Map<String, dynamic> ? parsed : {'success': true};
+        try {
+          debugPrint('updateApplicationStatus returning: ${jsonEncode(result)}');
+        } catch (_) {
+          debugPrint('updateApplicationStatus returning (non-encodable): $result');
+        }
+        return result;
       } catch (e) {
+        debugPrint('updateApplicationStatus returning success fallback');
         return {'success': true};
       }
     } else {
@@ -456,6 +582,11 @@ class ApiService {
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
+      try {
+        debugPrint('forgotPassword returning: ${jsonEncode(parsed)}');
+      } catch (_) {
+        debugPrint('forgotPassword returning (non-encodable): $parsed');
+      }
       return parsed is Map<String, dynamic> ? parsed : {'message': 'OK'};
     } else {
       throw Exception(
@@ -484,6 +615,11 @@ class ApiService {
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
+      try {
+        debugPrint('resetPassword returning: ${jsonEncode(parsed)}');
+      } catch (_) {
+        debugPrint('resetPassword returning (non-encodable): $parsed');
+      }
       return parsed is Map<String, dynamic> ? parsed : {'message': 'OK'};
     } else {
       throw Exception(
@@ -506,6 +642,11 @@ class ApiService {
     final response = await http.patch(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
+      try {
+        debugPrint('updateBio returning: ${jsonEncode(parsed)}');
+      } catch (_) {
+        debugPrint('updateBio returning (non-encodable): $parsed');
+      }
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
       throw Exception(
@@ -530,6 +671,11 @@ class ApiService {
     final response = await http.patch(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
+      try {
+        debugPrint('updateSkills returning: ${jsonEncode(parsed)}');
+      } catch (_) {
+        debugPrint('updateSkills returning (non-encodable): $parsed');
+      }
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
       throw Exception(
@@ -554,6 +700,11 @@ class ApiService {
     final response = await http.patch(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
+      try {
+        debugPrint('updateLocation returning: ${jsonEncode(parsed)}');
+      } catch (_) {
+        debugPrint('updateLocation returning (non-encodable): $parsed');
+      }
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
       throw Exception(
@@ -578,6 +729,11 @@ class ApiService {
     final response = await http.patch(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       final parsed = jsonDecode(response.body);
+      try {
+        debugPrint('updateProfilePic returning: ${jsonEncode(parsed)}');
+      } catch (_) {
+        debugPrint('updateProfilePic returning (non-encodable): $parsed');
+      }
       return parsed is Map<String, dynamic> ? parsed : {'success': true};
     } else {
       throw Exception(
