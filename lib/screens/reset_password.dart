@@ -86,8 +86,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               ),
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty)
+                              if (v == null || v.isEmpty) {
                                 return 'Enter password';
+                              }
                               if (v.length < 6) return 'Password too short';
                               return null;
                             },
@@ -109,10 +110,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               ),
                             ),
                             validator: (v) {
-                              if (v == null || v.isEmpty)
+                              if (v == null || v.isEmpty) {
                                 return 'Confirm password';
-                              if (v != _passwordCtrl.text)
+                              }
+                              if (v != _passwordCtrl.text) {
                                 return 'Passwords do not match';
+                              }
                               return null;
                             },
                           ),
