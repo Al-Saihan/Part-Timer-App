@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/api_response.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
 import 'ratings_screen.dart';
@@ -251,24 +252,25 @@ void _showApplicantDetails(
                                   return;
                                 }
                                 setState(() => loading = true);
-                                try {
-                                  await ApiService.updateApplicationStatus(
-                                    applicationId: appId,
-                                    status: 'rejected',
-                                  );
+                                final response = await ApiService.updateApplicationStatus(
+                                  applicationId: appId,
+                                  status: 'rejected',
+                                );
+                                setState(() => loading = false);
+                                
+                                if (response.success) {
                                   Navigator.pop(ctx2);
                                   ScaffoldMessenger.of(ctx2).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Application rejected'),
-                                    ),
+                                    SnackBar(content: Text(response.message)),
                                   );
                                   if (onUpdated != null) onUpdated();
-                                } catch (e) {
+                                } else {
                                   ScaffoldMessenger.of(ctx2).showSnackBar(
-                                    SnackBar(content: Text('Failed: $e')),
+                                    SnackBar(
+                                      content: Text(response.message),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
-                                } finally {
-                                  setState(() => loading = false);
                                 }
                               },
                         child: const Text(
@@ -302,24 +304,25 @@ void _showApplicantDetails(
                                   return;
                                 }
                                 setState(() => loading = true);
-                                try {
-                                  await ApiService.updateApplicationStatus(
-                                    applicationId: appId,
-                                    status: 'accepted',
-                                  );
+                                final response = await ApiService.updateApplicationStatus(
+                                  applicationId: appId,
+                                  status: 'accepted',
+                                );
+                                setState(() => loading = false);
+                                
+                                if (response.success) {
                                   Navigator.pop(ctx2);
                                   ScaffoldMessenger.of(ctx2).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Application accepted'),
-                                    ),
+                                    SnackBar(content: Text(response.message)),
                                   );
                                   if (onUpdated != null) onUpdated();
-                                } catch (e) {
+                                } else {
                                   ScaffoldMessenger.of(ctx2).showSnackBar(
-                                    SnackBar(content: Text('Failed: $e')),
+                                    SnackBar(
+                                      content: Text(response.message),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
-                                } finally {
-                                  setState(() => loading = false);
                                 }
                               },
                         child: loading
@@ -479,19 +482,39 @@ class RecruiterHomeTab extends StatefulWidget {
 }
 
 class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
-  late Future<List<Map<String, dynamic>>> _applicantsFuture;
+  late Future<List<Map<String, dynamic>>?> _applicantsFuture;
 
   @override
   void initState() {
     super.initState();
-    _applicantsFuture = ApiService.fetchApplicants();
+    _applicantsFuture = _fetchApplicants();
+  }
+
+  Future<List<Map<String, dynamic>>?> _fetchApplicants() async {
+    final response = await ApiService.fetchApplicants();
+    if (!response.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+    return response.data;
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _applicantsFuture = ApiService.fetchApplicants();
+      _applicantsFuture = _fetchApplicants();
     });
     await _applicantsFuture;
+  }
+
+  Future<Map<String, dynamic>?> _fetchCurrentUser() async {
+    final response = await ApiService.fetchCurrentUser();
+    if (!response.success) return null;
+    return response.data;
   }
 
   @override
@@ -506,7 +529,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: FutureBuilder<Map<String, dynamic>?>(
-                future: ApiService.fetchCurrentUser(),
+                future: _fetchCurrentUser(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox(
@@ -599,7 +622,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                 horizontal: 16.0,
                 vertical: 8.0,
               ),
-              child: FutureBuilder<List<Map<String, dynamic>>>(
+              child: FutureBuilder<List<Map<String, dynamic>>?>(
                 future: _applicantsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -759,17 +782,31 @@ class PostedJobsTab extends StatefulWidget {
 }
 
 class _PostedJobsTabState extends State<PostedJobsTab> {
-  late Future<List<Map<String, dynamic>>> _postedJobsFuture;
+  late Future<List<Map<String, dynamic>>?> _postedJobsFuture;
 
   @override
   void initState() {
     super.initState();
-    _postedJobsFuture = ApiService.fetchPostedJobs();
+    _postedJobsFuture = _fetchPostedJobs();
+  }
+
+  Future<List<Map<String, dynamic>>?> _fetchPostedJobs() async {
+    final response = await ApiService.fetchPostedJobs();
+    if (!response.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+    return response.data;
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _postedJobsFuture = ApiService.fetchPostedJobs();
+      _postedJobsFuture = _fetchPostedJobs();
     });
     await _postedJobsFuture;
   }
@@ -778,7 +815,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: FutureBuilder<List<Map<String, dynamic>>>(
+      child: FutureBuilder<List<Map<String, dynamic>>?>(
         future: _postedJobsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -993,9 +1030,20 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
       const SnackBar(content: Text('Loading applicants...')),
     );
 
-    try {
-      final all = await ApiService.fetchApplicants();
-      final filtered = all.where((a) {
+    final response = await ApiService.fetchApplicants();
+    
+    if (!response.success) {
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    final all = response.data ?? [];
+    final filtered = all.where((a) {
         // Job may come under key 'job' or 'job_id'
         final j = a['job'];
         if (j is Map && j['id'] != null) return j['id'] == jobId;
@@ -1090,11 +1138,6 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
           );
         },
       );
-    } catch (e) {
-      scaffold.showSnackBar(
-        SnackBar(content: Text('Failed to load applicants: $e')),
-      );
-    }
   }
 }
 
@@ -1116,7 +1159,7 @@ class _ProfileTabState extends State<ProfileTab> {
   @override
   void initState() {
     super.initState();
-    _userFuture = ApiService.fetchCurrentUser();
+    _userFuture = _fetchUser();
   }
 
   @override
@@ -1126,9 +1169,15 @@ class _ProfileTabState extends State<ProfileTab> {
     super.dispose();
   }
 
+  Future<Map<String, dynamic>?> _fetchUser() async {
+    final response = await ApiService.fetchCurrentUser();
+    if (!response.success) return null;
+    return response.data;
+  }
+
   Future<void> _refreshUser() async {
     setState(() {
-      _userFuture = ApiService.fetchCurrentUser();
+      _userFuture = _fetchUser();
     });
     await _userFuture;
   }
@@ -1140,31 +1189,38 @@ class _ProfileTabState extends State<ProfileTab> {
     });
 
     final scaffold = ScaffoldMessenger.of(context);
-    try {
-      if (field == 'bio') {
-        await ApiService.updateBio(
-          bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
-        );
-      } else if (field == 'location') {
-        await ApiService.updateLocation(
-          location: _locationCtrl.text.trim().isEmpty
-              ? null
-              : _locationCtrl.text.trim(),
-        );
-      }
+    
+    dynamic response;
+    if (field == 'bio') {
+      response = await ApiService.updateBio(
+        bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
+      );
+    } else if (field == 'location') {
+      response = await ApiService.updateLocation(
+        location: _locationCtrl.text.trim().isEmpty
+            ? null
+            : _locationCtrl.text.trim(),
+      );
+    }
 
+    if (response.success) {
       scaffold.showSnackBar(
-        const SnackBar(content: Text('Updated successfully')),
+        SnackBar(content: Text(response.message)),
       );
       await _refreshUser();
-    } catch (e) {
-      scaffold.showSnackBar(SnackBar(content: Text('Update failed: $e')));
-    } finally {
-      setState(() {
-        if (field == 'bio') _loadingBio = false;
-        if (field == 'location') _loadingLocation = false;
-      });
+    } else {
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+    
+    setState(() {
+      if (field == 'bio') _loadingBio = false;
+      if (field == 'location') _loadingLocation = false;
+    });
   }
 
   void _showProfileActions() {
@@ -1204,24 +1260,24 @@ class _ProfileTabState extends State<ProfileTab> {
                                 ? null
                                 : () async {
                                     setState(() => loading = true);
-                                    try {
-                                      await ApiService.updateProfilePic(
-                                        profilePic: name,
-                                      );
+                                    final response = await ApiService.updateProfilePic(
+                                      profilePic: name,
+                                    );
+                                    setState(() => loading = false);
+                                    
+                                    if (response.success) {
                                       scaffold.showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Avatar updated'),
-                                        ),
+                                        SnackBar(content: Text(response.message)),
                                       );
                                       Navigator.pop(ctx2);
                                       await _refreshUser();
-                                    } catch (e) {
+                                    } else {
                                       scaffold.showSnackBar(
                                         SnackBar(
-                                          content: Text('Update failed: $e'),
+                                          content: Text(response.message),
+                                          backgroundColor: Colors.red,
                                         ),
                                       );
-                                      setState(() => loading = false);
                                     }
                                   },
                             child: Column(
@@ -1504,10 +1560,10 @@ Drawer _buildDrawer(BuildContext context) {
       children: [
         DrawerHeader(
           decoration: const BoxDecoration(color: Color.fromARGB(255, 111, 146, 175)),
-          child: FutureBuilder<Map<String, dynamic>?>(
+          child: FutureBuilder<ApiResponse<Map<String, dynamic>>>(
             future: ApiService.fetchCurrentUser(),
             builder: (ctx, snap) {
-              final user = snap.data;
+              final user = snap.data?.data;
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -1597,17 +1653,14 @@ Drawer _buildDrawer(BuildContext context) {
           onTap: () async {
             Navigator.pop(context); // close drawer
 
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logging out...')));
-
-            try {
-              await ApiService.logout();
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout API failed: $e')));
-            } finally {
-              await clearToken();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const SignInPage()), (route) => false);
-              }
+            await ApiService.logout();
+            await clearToken();
+            
+            if (context.mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const SignInPage()),
+                (route) => false,
+              );
             }
           },
         ),
@@ -1732,70 +1785,64 @@ void _showAddJobDialog(BuildContext context) {
                                 ? null
                                 : () async {
                                     setState(() => isLoading = true);
+                                      
+                                    final title = titleCtrl.text.trim();
+                                    final desc = descCtrl.text.trim();
+                                    final hours =
+                                        int.tryParse(hoursCtrl.text.trim()) ??
+                                        0;
+                                    final payment =
+                                        double.tryParse(
+                                          paymentCtrl.text.trim(),
+                                        ) ??
+                                        0;
 
-                                    try {
-                                      final title = titleCtrl.text.trim();
-                                      final desc = descCtrl.text.trim();
-                                      final hours =
-                                          int.tryParse(hoursCtrl.text.trim()) ??
-                                          0;
-                                      final payment =
-                                          double.tryParse(
-                                            paymentCtrl.text.trim(),
-                                          ) ??
-                                          0;
-
-                                        if (title.isEmpty ||
-                                            desc.isEmpty ||
-                                            hours <= 0 ||
-                                            payment <= 0) {
-                                          setState(() => isLoading = false);
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Please fill all fields correctly',
-                                              ),
+                                      if (title.isEmpty ||
+                                          desc.isEmpty ||
+                                          hours <= 0 ||
+                                          payment <= 0) {
+                                        setState(() => isLoading = false);
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Please fill all fields correctly',
                                             ),
-                                          );
-                                          return;
-                                        }
+                                          ),
+                                        );
+                                        return;
+                                      }
 
-                                      final res = await ApiService.createJob(
-                                        title: title,
-                                        description: desc,
-                                        difficulty: selectedDifficulty,
-                                        workingHours: hours,
-                                        payment: payment,
-                                        location: locationCtrl.text.trim().isEmpty
-                                            ? null
-                                            : locationCtrl.text.trim(),
-                                      );
+                                    final response = await ApiService.createJob(
+                                      title: title,
+                                      description: desc,
+                                      difficulty: selectedDifficulty,
+                                      workingHours: hours,
+                                      payment: payment,
+                                      location: locationCtrl.text.trim().isEmpty
+                                          ? null
+                                          : locationCtrl.text.trim(),
+                                    );
+                                    
+                                    setState(() => isLoading = false);
 
+                                    if (response.success) {
                                       Navigator.pop(context);
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            res['message'] ??
-                                                'Job created successfully!',
-                                          ),
-                                        ),
+                                        SnackBar(content: Text(response.message)),
                                       );
-                                    } catch (e) {
+                                    } else {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
                                         SnackBar(
-                                          content: Text(
-                                            'Failed to create job: $e',
-                                          ),
+                                          content: Text(response.message),
+                                          backgroundColor: Colors.red,
                                         ),
                                       );
-                                    } finally {
-                                      setState(() => isLoading = false);
                                     }
                                   },
                             child: isLoading

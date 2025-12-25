@@ -27,22 +27,29 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     final scaffold = ScaffoldMessenger.of(context);
-    try {
-      final res = await ApiService.resetPassword(
-        email: widget.email,
-        password: _passwordCtrl.text,
-        passwordConfirmation: _confirmCtrl.text,
-      );
-      scaffold.showSnackBar(
-        SnackBar(
-          content: Text(res['message']?.toString() ?? 'Password updated'),
-        ),
-      );
-      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
-    } catch (e) {
-      scaffold.showSnackBar(SnackBar(content: Text('Failed: $e')));
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    
+    final response = await ApiService.resetPassword(
+      email: widget.email,
+      password: _passwordCtrl.text,
+      passwordConfirmation: _confirmCtrl.text,
+    );
+
+    if (mounted) {
+      setState(() => _loading = false);
+
+      if (response.success) {
+        scaffold.showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } else {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

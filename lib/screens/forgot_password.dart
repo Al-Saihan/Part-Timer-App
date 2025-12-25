@@ -24,25 +24,32 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     final scaffold = ScaffoldMessenger.of(context);
-    try {
-      final res = await ApiService.forgotPassword(
-        email: _emailCtrl.text.trim(),
-      );
-      scaffold.showSnackBar(
-        SnackBar(content: Text(res['message']?.toString() ?? 'Email verified')),
-      );
-      // navigate to reset page
-      if (mounted) {
+    
+    final response = await ApiService.forgotPassword(
+      email: _emailCtrl.text.trim(),
+    );
+    
+    if (mounted) {
+      setState(() => _loading = false);
+
+      if (response.success) {
+        scaffold.showSnackBar(
+          SnackBar(content: Text(response.message)),
+        );
+        // navigate to reset page
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ResetPasswordPage(email: _emailCtrl.text.trim()),
           ),
         );
+      } else {
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    } catch (e) {
-      scaffold.showSnackBar(SnackBar(content: Text('Failed: $e')));
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 

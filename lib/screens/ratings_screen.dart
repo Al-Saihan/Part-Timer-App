@@ -25,9 +25,35 @@ class _RatingsScreenState extends State<RatingsScreen>
   }
 
   void _loadAll() {
-    _eligibleFuture = ApiService.fetchEligibleRatings();
-    _myFuture = ApiService.fetchMyRatings();
-    _aboutMeFuture = ApiService.fetchRatingsAboutMe();
+    _eligibleFuture = _fetchEligible();
+    _myFuture = _fetchMy();
+    _aboutMeFuture = _fetchAboutMe();
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchEligible() async {
+    final response = await ApiService.fetchEligibleRatings();
+    if (!response.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return [];
+    }
+    return response.data ?? [];
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchMy() async {
+    final response = await ApiService.fetchMyRatings();
+    if (!response.success) return [];
+    return response.data ?? [];
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchAboutMe() async {
+    final response = await ApiService.fetchRatingsAboutMe();
+    if (!response.success) return [];
+    return response.data ?? [];
   }
 
   Future<void> _refreshAll() async {
@@ -324,20 +350,27 @@ class _RatingsScreenState extends State<RatingsScreen>
                             return;
                           }
                           setState(() => loading = true);
-                          try {
-                            await ApiService.submitRating(
-                              ratedUserId: int.tryParse(ratedId.toString()) ?? 0,
-                              jobId: int.tryParse(jobId.toString()) ?? 0,
-                              rating: rating,
-                              review: reviewCtrl.text.trim().isEmpty ? null : reviewCtrl.text.trim(),
-                            );
+                          final response = await ApiService.submitRating(
+                            ratedUserId: int.tryParse(ratedId.toString()) ?? 0,
+                            jobId: int.tryParse(jobId.toString()) ?? 0,
+                            rating: rating,
+                            review: reviewCtrl.text.trim().isEmpty ? null : reviewCtrl.text.trim(),
+                          );
+                          setState(() => loading = false);
+                          
+                          if (response.success) {
                             Navigator.pop(ctx2);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rating submitted')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(response.message)),
+                            );
                             await _refreshAll();
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                          } finally {
-                            setState(() => loading = false);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(response.message),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
                           }
                         },
                   child: loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Submit'),

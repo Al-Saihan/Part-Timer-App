@@ -144,17 +144,37 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  late Future<List<Job>> _jobsFuture;
+  late Future<List<Job>?> _jobsFuture;
 
   @override
   void initState() {
     super.initState();
-    _jobsFuture = ApiService.fetchJobs();
+    _jobsFuture = _fetchJobs();
+  }
+
+  Future<List<Job>?> _fetchJobs() async {
+    final response = await ApiService.fetchJobs();
+    if (!response.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>?> _fetchCurrentUser() async {
+    final response = await ApiService.fetchCurrentUser();
+    if (!response.success) return null;
+    return response.data;
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _jobsFuture = ApiService.fetchJobs();
+      _jobsFuture = _fetchJobs();
     });
     await _jobsFuture;
   }
@@ -168,7 +188,7 @@ class _HomeTabState extends State<HomeTab> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: FutureBuilder<Map<String, dynamic>?>(
-              future: ApiService.fetchCurrentUser(),
+              future: _fetchCurrentUser(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(
@@ -257,7 +277,7 @@ class _HomeTabState extends State<HomeTab> {
           ),
 
           // ! MARK: Jobs List
-          FutureBuilder<List<Job>>(
+          FutureBuilder<List<Job>?>(
             future: _jobsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -407,17 +427,31 @@ class AppliedJobsTab extends StatefulWidget {
 }
 
 class _AppliedJobsTabState extends State<AppliedJobsTab> {
-  late Future<List<Map<String, dynamic>>> _appliedFuture;
+  late Future<List<Map<String, dynamic>>?> _appliedFuture;
 
   @override
   void initState() {
     super.initState();
-    _appliedFuture = ApiService.fetchAppliedJobs();
+    _appliedFuture = _fetchApplied();
+  }
+
+  Future<List<Map<String, dynamic>>?> _fetchApplied() async {
+    final response = await ApiService.fetchAppliedJobs();
+    if (!response.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+    return response.data;
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _appliedFuture = ApiService.fetchAppliedJobs();
+      _appliedFuture = _fetchApplied();
     });
     await _appliedFuture;
   }
@@ -426,7 +460,7 @@ class _AppliedJobsTabState extends State<AppliedJobsTab> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: FutureBuilder<List<Map<String, dynamic>>>(
+      child: FutureBuilder<List<Map<String, dynamic>>?>(
         future: _appliedFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -589,12 +623,18 @@ class _ProfileTabState extends State<ProfileTab> {
   @override
   void initState() {
     super.initState();
-    _userFuture = ApiService.fetchCurrentUser();
+    _userFuture = _fetchUser();
+  }
+
+  Future<Map<String, dynamic>?> _fetchUser() async {
+    final response = await ApiService.fetchCurrentUser();
+    if (!response.success) return null;
+    return response.data;
   }
 
   Future<void> _refreshUser() async {
     setState(() {
-      _userFuture = ApiService.fetchCurrentUser();
+      _userFuture = _fetchUser();
     });
     await _userFuture;
   }
@@ -607,38 +647,45 @@ class _ProfileTabState extends State<ProfileTab> {
     });
 
     final scaffold = ScaffoldMessenger.of(context);
-    try {
-      if (field == 'bio') {
-        await ApiService.updateBio(
-          bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
-        );
-      } else if (field == 'skills') {
-        await ApiService.updateSkills(
-          skills: _skillsCtrl.text.trim().isEmpty
-              ? null
-              : _skillsCtrl.text.trim(),
-        );
-      } else if (field == 'locations') {
-        await ApiService.updateLocation(
-          location: _locationsCtrl.text.trim().isEmpty
-              ? null
-              : _locationsCtrl.text.trim(),
-        );
-      }
+    
+    dynamic response;
+    if (field == 'bio') {
+      response = await ApiService.updateBio(
+        bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
+      );
+    } else if (field == 'skills') {
+      response = await ApiService.updateSkills(
+        skills: _skillsCtrl.text.trim().isEmpty
+            ? null
+            : _skillsCtrl.text.trim(),
+      );
+    } else if (field == 'locations') {
+      response = await ApiService.updateLocation(
+        location: _locationsCtrl.text.trim().isEmpty
+            ? null
+            : _locationsCtrl.text.trim(),
+      );
+    }
 
+    if (response.success) {
       scaffold.showSnackBar(
-        const SnackBar(content: Text('Updated successfully')),
+        SnackBar(content: Text(response.message)),
       );
       await _refreshUser();
-    } catch (e) {
-      scaffold.showSnackBar(SnackBar(content: Text('Update failed: $e')));
-    } finally {
-      setState(() {
-        if (field == 'bio') _loadingBio = false;
-        if (field == 'skills') _loadingSkills = false;
-        if (field == 'locations') _loadingLocations = false;
-      });
+    } else {
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+    
+    setState(() {
+      if (field == 'bio') _loadingBio = false;
+      if (field == 'skills') _loadingSkills = false;
+      if (field == 'locations') _loadingLocations = false;
+    });
   }
 
   @override
@@ -647,7 +694,7 @@ class _ProfileTabState extends State<ProfileTab> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: FutureBuilder<Map<String, dynamic>?>(
-          future: ApiService.fetchCurrentUser(),
+          future: _fetchUser(),
           builder: (context, snapshot) {
             final user = snapshot.data;
 
@@ -957,24 +1004,24 @@ class _ProfileTabState extends State<ProfileTab> {
                                 ? null
                                 : () async {
                                     setState(() => loading = true);
-                                    try {
-                                      await ApiService.updateProfilePic(
-                                        profilePic: name,
-                                      );
+                                    final response = await ApiService.updateProfilePic(
+                                      profilePic: name,
+                                    );
+                                    setState(() => loading = false);
+                                    
+                                    if (response.success) {
                                       scaffold.showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Avatar updated'),
-                                        ),
+                                        SnackBar(content: Text(response.message)),
                                       );
                                       Navigator.pop(ctx2);
                                       await _refreshUser();
-                                    } catch (e) {
+                                    } else {
                                       scaffold.showSnackBar(
                                         SnackBar(
-                                          content: Text('Update failed: $e'),
+                                          content: Text(response.message),
+                                          backgroundColor: Colors.red,
                                         ),
                                       );
-                                      setState(() => loading = false);
                                     }
                                   },
                             child: Column(
@@ -1095,24 +1142,14 @@ Drawer _buildDrawer(BuildContext context) {
           onTap: () async {
             Navigator.pop(context); // close drawer
 
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Logging out...')));
-
-            try {
-              await ApiService.logout();
-            } catch (e) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Logout API failed: $e')));
-            } finally {
-              await clearToken();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const SignInPage()),
-                  (route) => false,
-                );
-              }
+            await ApiService.logout();
+            await clearToken();
+            
+            if (context.mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const SignInPage()),
+                (route) => false,
+              );
             }
           },
         ),
@@ -1134,9 +1171,10 @@ Future<void> _showJobDetails(
   );
 
   Map<String, dynamic>? details;
-  try {
-    details = await ApiService.fetchJobDetails(jobId: job.id);
-  } catch (_) {
+  final detailsResponse = await ApiService.fetchJobDetails(jobId: job.id);
+  if (detailsResponse.success) {
+    details = detailsResponse.data;
+  } else {
     // fallback to minimal data when details endpoint not available
     details = null;
   }
@@ -1311,20 +1349,21 @@ Future<void> _showJobDetails(
                             scaffold.showSnackBar(
                               const SnackBar(content: Text('Applying...')),
                             );
-                            try {
-                              final res = await ApiService.applyJob(
-                                jobId: job.id,
-                              );
-                              final msg =
-                                  (res['message'] ?? 'Applied successfully')
-                                      .toString();
+                            final response = await ApiService.applyJob(
+                              jobId: job.id,
+                            );
+                            
+                            if (response.success) {
                               scaffold.showSnackBar(
-                                SnackBar(content: Text(msg)),
+                                SnackBar(content: Text(response.message)),
                               );
                               if (onApplied != null) onApplied();
-                            } catch (e) {
+                            } else {
                               scaffold.showSnackBar(
-                                SnackBar(content: Text('Apply failed: $e')),
+                                SnackBar(
+                                  content: Text(response.message),
+                                  backgroundColor: Colors.red,
+                                ),
                               );
                             }
                           },

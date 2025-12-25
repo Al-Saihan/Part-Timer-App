@@ -36,14 +36,19 @@ class _SignInPageState extends State<SignInPage> {
       _loading = true;
     });
 
-    try {
-      await ApiService.login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+    final response = await ApiService.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
+    if (!mounted) return;
+    
+    setState(() {
+      _loading = false;
+    });
+
+    if (response.success) {
       // ? On successful login, navigate to HomePage
-      if (!mounted) return;
       // decide where to go based on saved user_type
       final type = await getUserType();
       if (type == 'recruiter') {
@@ -57,14 +62,13 @@ class _SignInPageState extends State<SignInPage> {
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
-    } finally {
-      setState(() {
-        _loading = false;
-      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

@@ -39,34 +39,30 @@ class _SignUpPageState extends State<SignUpPage> {
 
     setState(() => _loading = true);
 
-    try {
-      await ApiService.register(
-        name: '${_firstController.text.trim()} ${_lastController.text.trim()}',
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        userType: _role!,
-      );
+    final response = await ApiService.register(
+      name: '${_firstController.text.trim()} ${_lastController.text.trim()}',
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      userType: _role!,
+    );
 
-      // On successful registration, navigate to SignInPage
-      if (mounted) {
+    if (mounted) {
+      setState(() => _loading = false);
+
+      if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please sign in.'),
-          ),
+          SnackBar(content: Text(response.message)),
         );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const SignInPage()),
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Registration failed: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _loading = false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
