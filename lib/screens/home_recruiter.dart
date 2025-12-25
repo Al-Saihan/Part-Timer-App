@@ -70,6 +70,21 @@ void _showApplicantDetails(
       .toString();
   final appliedAt = applicant['applied_at'] ?? applicant['created_at'] ?? '';
   final dateStr = _formatDate(appliedAt);
+  // Parse seeker skills and ratings safely
+  List<String> skills = [];
+  try {
+    final rawSkills = seeker is Map ? seeker['skills'] : null;
+    if (rawSkills is String) {
+      skills = rawSkills.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    } else if (rawSkills is List) {
+      skills = rawSkills.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+  } catch (_) {
+    skills = [];
+  }
+
+  final seekerAvgRating = seeker is Map ? (seeker['avg_rating'] ?? seeker['rating'] ?? seeker['avgRating']) : null;
+  final seekerRatingCount = seeker is Map ? (seeker['rating_count'] ?? seeker['ratingCount'] ?? 0) : 0;
 
   showDialog(
     context: context,
@@ -143,6 +158,62 @@ void _showApplicantDetails(
                   ],
                 ),
                 const SizedBox(height: 12),
+                // Seeker details: location, bio, skills, ratings
+                if ((seeker is Map) && (seeker['location'] ?? seeker['address']) != null) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            (seeker['location'] ?? seeker['address']).toString(),
+                            style: const TextStyle(color: Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                if ((seeker is Map) && (seeker['bio'] ?? '').toString().isNotEmpty) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      (seeker['bio'] ?? '').toString(),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                if (skills.isNotEmpty) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: skills.map((s) => Chip(label: Text(s))).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                if (seekerAvgRating != null) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.star, size: 16, color: Colors.amber),
+                      const SizedBox(width: 6),
+                      Text(seekerAvgRating.toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 6),
+                      Text('(${seekerRatingCount.toString()})', style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
                 const Divider(),
                 const SizedBox(height: 8),
                 Row(
@@ -601,7 +672,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                             ),
                             child: Row(
                               children: [
-                                const CircleAvatar(child: Icon(Icons.person)),
+                                _buildProfileAvatar(seeker, radius: 26),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -777,88 +848,126 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
-                      child: ListTile(
-                        leading: (job['recruiter'] is Map) ? _buildProfileAvatar(Map<String,dynamic>.from(job['recruiter']), radius: 20) : const CircleAvatar(child: Icon(Icons.work)),
-                        title: Text(
-                          title,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if ((job['location'] ?? job['locations']) != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 6.0),
-                                    child: Row(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () => _showApplicantsDialog(context, id, title),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // avatar
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withAlpha(15),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.work,
+                                      size: 28,
+                                      color: Colors.blueAccent,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 18),
+
+                              // main content: title, location, hours, payment each on its own line
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      " $title",
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // location line
+                                    if ((job['location'] ?? job['locations']) != null) ...[
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              (job['location'] is String)
+                                                  ? job['location']
+                                                  : (job['locations'] is List)
+                                                      ? (job['locations'] as List).join(', ')
+                                                      : job['location']?.toString() ?? '',
+                                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                    ],
+
+                                    // hours line
+                                    Row(
                                       children: [
-                                        Icon(
-                                          Icons.location_on,
-                                          size: 16,
-                                          color: Colors.grey[600],
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
+                                        Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                                        const SizedBox(width: 6),
+                                        Flexible(
                                           child: Text(
-                                            (job['location'] is String)
-                                                ? job['location']
-                                                : (job['locations'] is List)
-                                                    ? (job['locations'] as List).join(', ')
-                                                    : job['location']?.toString() ?? '',
+                                            '$workingHours hrs/day',
+                                            style: const TextStyle(fontSize: 13),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.schedule,
-                                      size: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('$workingHours hrs/day'),
-                                    const Spacer(),
-                                    Icon(
-                                      Icons.payments,
-                                      size: 16,
-                                      color: Colors.green[700],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '$payment per hour',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                    const SizedBox(height: 6),
+
+                                    // payment line
+                                    Row(
+                                      children: [
+                                        Icon(Icons.payments, size: 14, color: Colors.green[700]),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            '$payment per hour',
+                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+
+                              // applicants badge
+                              const SizedBox(width: 12),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Chip(
+                                    label: Text('$appsCount', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    backgroundColor: Colors.blue[50],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text('applicants', style: TextStyle(fontSize: 11, color: Colors.grey[700])),
+                                ],
+                              ),
+                            ],
                           ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '$appsCount',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'applicants',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
                         ),
-                        onTap: () => _showApplicantsDialog(context, id, title),
                       ),
                     );
                   },
