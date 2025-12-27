@@ -96,7 +96,7 @@ void _showApplicantDetails(
       return StatefulBuilder(
         builder: (ctx2, setState) {
           return AlertDialog(
-            backgroundColor: Colors.white.withAlpha(243),
+            backgroundColor: const Color.fromARGB(255, 213, 240, 255),
             contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -142,13 +142,13 @@ void _showApplicantDetails(
                     Chip(
                       label: Text(
                         status,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
                       ),
                       backgroundColor: status.toLowerCase() == 'pending'
-                          ? Colors.orange[50]
+                          ? const Color.fromARGB(255, 172, 106, 1)
                           : (status.toLowerCase() == 'accepted'
-                                ? Colors.green[50]
-                                : Colors.red[50]),
+                                ? const Color.fromARGB(255, 64, 184, 74)
+                                : const Color.fromARGB(255, 219, 44, 70)),
                     ),
                     const Spacer(),
                     if (dateStr.isNotEmpty)
@@ -338,7 +338,7 @@ void _showApplicantDetails(
                               )
                             : const Text(
                                 'Accept',
-                                style: TextStyle(color: Colors.black),
+                                style: TextStyle(color: Colors.white),
                               ),
                       ),
                     ),
@@ -610,7 +610,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                         flex: 3,
                         child: Card(
                           elevation: 4,
-                          color: Colors.white.withAlpha(243),
+                          color: const Color.fromARGB(255, 213, 240, 255),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -652,7 +652,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                         flex: 1,
                         child: Card(
                           elevation: 4,
-                          color: Colors.white.withAlpha(243),
+                          color: const Color.fromARGB(255, 213, 240, 255),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -674,10 +674,21 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.center,
                 child: Text(
                   'Job Applicants',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(1, 1),
+                      blurRadius: 3,
+                      color: Colors.black.withAlpha(77),
+                    ),
+                  ],
+                ),
                 ),
               ),
             ),
@@ -744,7 +755,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
 
                       return Card(
                         elevation: 4,
-                        color: Colors.white.withAlpha(243),
+                        color: const Color.fromARGB(255, 213, 240, 255),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -799,16 +810,17 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: status.toLowerCase() == 'pending'
-                                            ? Colors.orange[100]
+                                            ? const Color.fromARGB(255, 172, 106, 1)
                                             : status.toLowerCase() == 'rejected'
-                                            ? Colors.red[100]
-                                            : Colors.green[100],
+                                            ? const Color.fromARGB(255, 219, 44, 70)
+                                            : const Color.fromARGB(255, 64, 184, 74),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         status,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
@@ -918,20 +930,34 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                   horizontal: 16,
                   vertical: 8,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Your Posted Jobs',
-                        style: Theme.of(context).textTheme.titleLarge,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Your Posted Jobs',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                offset: const Offset(1, 1),
+                                blurRadius: 3,
+                                color: Colors.black.withAlpha(77),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      tooltip: 'Refresh',
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _refresh,
-                    ),
-                  ],
+                      IconButton(
+                        tooltip: 'Refresh',
+                        icon: const Icon(Icons.refresh, color: Colors.white,),
+                        onPressed: _refresh,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Expanded(
@@ -953,7 +979,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
-                      color: Colors.white.withAlpha(243),
+                      color: const Color.fromARGB(255, 213, 240, 255),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
@@ -1094,10 +1120,6 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
     String jobTitle,
   ) async {
     final scaffold = ScaffoldMessenger.of(context);
-    scaffold.showSnackBar(
-      const SnackBar(content: Text('Loading applicants...')),
-    );
-
     final response = await ApiService.fetchApplicants();
     
     if (!response.success) {
@@ -1123,7 +1145,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
         context: context,
         builder: (ctx) {
           return AlertDialog(
-            backgroundColor: Colors.white.withAlpha(243),
+            backgroundColor: const Color.fromARGB(255, 213, 240, 255),
             title: Text('Applicants - $jobTitle'),
             content: SizedBox(
               width: double.maxFinite,
@@ -1143,7 +1165,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
 
                         return Card(
                           elevation: 3,
-                          color: Colors.white.withAlpha(243),
+                          color: const Color.fromARGB(255, 213, 240, 255),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -1307,7 +1329,7 @@ class _ProfileTabState extends State<ProfileTab> {
         return StatefulBuilder(
           builder: (ctx2, setState) {
             return AlertDialog(
-              backgroundColor: Colors.white.withAlpha(243),
+              backgroundColor: const Color.fromARGB(255, 213, 240, 255),
               title: const Text('Choose Avatar'),
               content: SizedBox(
                 width: double.maxFinite,
@@ -1426,7 +1448,7 @@ class _ProfileTabState extends State<ProfileTab> {
               children: [
                 Card(
                   elevation: 4,
-                  color: Colors.white.withAlpha(243),
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1469,7 +1491,7 @@ class _ProfileTabState extends State<ProfileTab> {
                             children: [
                               Card(
                                 elevation: 2,
-                                color: Colors.white.withAlpha(243),
+                                color: const Color.fromARGB(255, 213, 240, 255),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1515,7 +1537,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Bio
                 Card(
                   elevation: 2,
-                  color: Colors.white.withAlpha(243),
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1560,7 +1582,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Bio'),
+                                  : const Text('Update Bio', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -1574,7 +1596,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Locations
                 Card(
                   elevation: 2,
-                  color: Colors.white.withAlpha(243),
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1618,7 +1640,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Location'),
+                                  : const Text('Update Location', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -1781,7 +1803,7 @@ void _showAddJobDialog(BuildContext context) {
       return StatefulBuilder(
         builder: (context, setState) {
           return Dialog(
-            backgroundColor: Colors.white.withAlpha(243),
+            backgroundColor: const Color.fromARGB(255, 213, 240, 255),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -1964,3 +1986,4 @@ void _showAddJobDialog(BuildContext context) {
     },
   );
 }
+
