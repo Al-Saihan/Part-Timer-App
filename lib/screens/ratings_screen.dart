@@ -102,7 +102,7 @@ class _RatingsScreenState extends State<RatingsScreen>
           final assetPath = 'assets/avatars/$profilePic.png';
           return CircleAvatar(
             radius: radius,
-            backgroundColor: Colors.grey[200],
+            backgroundColor: const Color.fromARGB(255, 213, 240, 255),
             child: ClipOval(
               child: Image.asset(
                 assetPath,
@@ -139,8 +139,11 @@ class _RatingsScreenState extends State<RatingsScreen>
     return Scaffold(
       extendBodyBehindAppBar: false,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 67, 163, 208),
+        backgroundColor: const Color.fromARGB(255, 31, 143, 189),
         foregroundColor: Colors.white,
+        toolbarHeight: 50,
+        elevation: 4,
+        shadowColor: const Color.fromARGB(255, 31, 143, 189).withAlpha(150),
         title: const Text('Ratings'),
         centerTitle: true,
         bottom: TabBar(
@@ -148,6 +151,8 @@ class _RatingsScreenState extends State<RatingsScreen>
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
           tabs: const [Tab(text: 'Eligible'), Tab(text: 'My Ratings'), Tab(text: 'About Me')],
         ),
       ),
@@ -234,7 +239,7 @@ class _RatingsScreenState extends State<RatingsScreen>
 
                     return Card(
                       elevation: 2,
-                      color: Colors.white.withAlpha(243),
+                      color: const Color.fromARGB(255, 213, 240, 255),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: _avatarFromMap(other, radius: 22),
@@ -249,7 +254,7 @@ class _RatingsScreenState extends State<RatingsScreen>
                                   backgroundColor: Colors.blue,
                                 ),
                                 onPressed: () => _showRateDialogForItem(item),
-                                child: Text(existing != null ? 'Edit' : 'Rate'),
+                                child: Text(existing != null ? 'Edit' : 'Rate', style: const TextStyle(color: Colors.white)),
                               )
                             : (existing != null
                                 ? const Text('Already Rated!', style: TextStyle(color: Colors.grey))
@@ -287,7 +292,7 @@ class _RatingsScreenState extends State<RatingsScreen>
 
                     return Card(
                       elevation: 2,
-                      color: Colors.white.withAlpha(243),
+                      color: const Color.fromARGB(255, 213, 240, 255),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: _avatarFromMap(rated, radius: 22),
@@ -334,7 +339,7 @@ class _RatingsScreenState extends State<RatingsScreen>
                     final review = r['review'] ?? r['comment'] ?? '';
 
                     return Card(
-                      elevation: 2,                      color: Colors.white.withAlpha(243),                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 2,                      color: const Color.fromARGB(255, 213, 240, 255),                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: _avatarFromMap(rater, radius: 22),
                         title: Text(rater is Map ? (rater['name'] ?? 'User') : 'User'),
@@ -383,7 +388,7 @@ class _RatingsScreenState extends State<RatingsScreen>
         return StatefulBuilder(
           builder: (ctx2, setState) {
             return AlertDialog(
-              backgroundColor: Colors.white.withAlpha(243),
+              backgroundColor: const Color.fromARGB(255, 213, 240, 255),
               title: Text('Rate ${other is Map ? (other['name'] ?? 'User') : 'User'}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -398,11 +403,11 @@ class _RatingsScreenState extends State<RatingsScreen>
                       );
                     }),
                   ),
-                  TextField(controller: reviewCtrl, decoration: const InputDecoration(hintText: 'Write a review (optional)'), maxLines: 3),
+                  TextField(controller: reviewCtrl, decoration: const InputDecoration(hintText: 'Write a review (optional)'), maxLines: 1),
                 ],
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx2), child: const Text('Cancel')),
+                TextButton(onPressed: () => Navigator.pop(ctx2), child: const Text('Cancel', style: TextStyle(color: Colors.blue))),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
@@ -438,7 +443,7 @@ class _RatingsScreenState extends State<RatingsScreen>
                             );
                           }
                         },
-                  child: loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Submit'),
+                  child: loading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Submit', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -448,3 +453,4 @@ class _RatingsScreenState extends State<RatingsScreen>
     );
   }
 }
+
