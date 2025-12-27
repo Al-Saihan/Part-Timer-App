@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'reset_password.dart';
 
+// ! MARK: Forgot Password
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
@@ -21,6 +22,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
+  // ! MARK: Submit Handler
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -37,7 +39,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         scaffold.showSnackBar(
           SnackBar(content: Text(response.message)),
         );
-        // navigate to reset page
+        // ? Navigate to reset password screen
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ResetPasswordPage(email: _emailCtrl.text.trim()),
@@ -66,7 +68,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ),
       body: Stack(
         children: [
-          // ? MARK: Background
+          // ! MARK: Background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -77,7 +79,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ),
 
-          // ? Soft decorative circle 1
+          // ? Decorative blur circles
           Positioned(
             top: -80,
             left: -60,
@@ -94,7 +96,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ),
 
-          // ? Soft decorative circle 2
           Positioned(
             bottom: -40,
             right: -50,
@@ -111,7 +112,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ),
 
-          // ? MARK: Content
+          // ! MARK: Form
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),

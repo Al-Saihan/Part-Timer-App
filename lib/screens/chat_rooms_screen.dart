@@ -4,6 +4,8 @@ import '../services/api_service.dart';
 import '../models/chat_room.dart';
 import 'chat_screen.dart';
 
+// ! MARK: Date Formatting
+// ? Format timestamps for chat list display
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
   try {
@@ -37,6 +39,8 @@ String _formatDate(dynamic raw) {
   }
 }
 
+// ! MARK: Avatar Builder
+// ? Build profile avatar from user data
 Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 24}) {
   if (user != null) {
     final profilePic = user['profile_pic']?.toString();
@@ -69,6 +73,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 24}) {
     return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 18));
   }
 
+  // ? Build network image URL
   String url = img;
   try {
     if (!url.startsWith('http')) {
@@ -84,6 +89,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 24}) {
   );
 }
 
+// ! MARK: Chat Rooms
 class ChatRoomsScreen extends StatefulWidget {
   const ChatRoomsScreen({super.key});
 
@@ -134,7 +140,7 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
       ),
       body: Stack(
         children: [
-          // Background
+          // ! MARK: Background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -145,7 +151,7 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
             ),
           ),
 
-          // Decorative circles
+          // ? Decorative blur circles
           Positioned(
             top: -80,
             left: -60,
@@ -177,7 +183,7 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
             ),
           ),
 
-          // Content
+          // ! MARK: Content
           RefreshIndicator(
             onRefresh: _refresh,
             child: FutureBuilder<List<ChatRoom>?>(

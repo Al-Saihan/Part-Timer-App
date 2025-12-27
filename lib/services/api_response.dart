@@ -1,3 +1,5 @@
+// ! MARK: API Response
+// ? Generic response wrapper for all API calls
 class ApiResponse<T> {
   final bool success;
   final T? data;

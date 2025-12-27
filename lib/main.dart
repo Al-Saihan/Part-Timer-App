@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'includes/auth.dart';
-
-// ! SCREENS IMPORT
 import 'screens/sign_in.dart';
 import 'screens/home_seeker.dart';
 import 'screens/home_recruiter.dart';
 
+// ! MARK: Initialization
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -18,6 +17,7 @@ void main() async {
   runApp(MainApp(isLoggedIn: logged, userType: userType));
 }
 
+// ! MARK: Main Widget
 class MainApp extends StatelessWidget {
   final bool isLoggedIn;
   final String? userType;
@@ -25,6 +25,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ? Determine which screen to show based on login status and user type
     Widget home;
     if (!isLoggedIn) {
       home = const SignInPage();

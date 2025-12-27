@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/chat_room.dart';
 
+// ! MARK: Formatting
+// ? Format message timestamps
 String _formatMessageTime(DateTime dt) {
   final hour = dt.hour.toString().padLeft(2, '0');
   final minute = dt.minute.toString().padLeft(2, '0');
   return '$hour:$minute';
 }
 
+// ! MARK: Avatar Builder
+// ? Build profile avatar for chat header
 Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 20}) {
   if (user != null) {
     final profilePic = user['profile_pic']?.toString();
@@ -57,6 +61,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 20}) {
   );
 }
 
+// ! MARK: Chat Screen
 class ChatScreen extends StatefulWidget {
   final int roomId;
   final Map<String, dynamic> otherUser;
@@ -84,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadMessages(isInitial: true);
-    // Auto-refresh every 5 seconds
+    // ? Auto-refresh messages every 5 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadMessages(silent: true));
   }
 
@@ -96,6 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  // ! MARK: Load Messages
   Future<void> _loadMessages({bool silent = false, bool isInitial = false}) async {
     if (!silent) setState(() => _isLoading = true);
 
@@ -105,13 +111,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (response.success && response.data != null) {
       setState(() {
-        _messages = response.data!.reversed.toList(); // Most recent at bottom
+        _messages = response.data!.reversed.toList();
       });
       
-      // Only scroll to bottom on first load
+      // ? Scroll to bottom on first load only
       if (_isFirstLoad) {
         _isFirstLoad = false;
-        // Wait for the frame to build, then scroll to bottom
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
             _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -128,6 +133,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // ! MARK: Send Message
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isSending) return;
@@ -143,9 +149,8 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isSending = false);
 
     if (response.success) {
-      // Reload all messages to ensure consistency
       await _loadMessages(silent: true);
-      // Scroll to bottom after sending
+      // ? Scroll to bottom after sending
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -164,11 +169,11 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
       }
-      // Restore the message text if it failed
       _messageController.text = text;
     }
   }
 
+  // ! MARK: Delete Message
   Future<void> _deleteMessage(ChatMessage message) async {
     final confirm = await showDialog<bool>(
       context: context,

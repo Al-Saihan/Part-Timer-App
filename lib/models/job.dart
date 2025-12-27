@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+// ! MARK: Job Model
 class Job {
   final int id;
   final String title;
@@ -21,8 +22,9 @@ class Job {
     this.recruiter,
   });
 
+  // ! MARK: JSON Parsing
   factory Job.fromJson(Map<String, dynamic> json) {
-    // Support multiple possible keys for nested recruiter info
+    // ? Parse recruiter info from various possible keys
     Map<String, dynamic>? recruiterMap;
     try {
       if (json['recruiter'] is Map) {

@@ -7,12 +7,14 @@ import '../models/chat_room.dart';
 import '../includes/auth.dart';
 import 'api_response.dart';
 
+// ! MARK: API Service
 class ApiService {
-  // ! Base URL - Laravel backend
+  // ! MARK: Configuration
   static final String baseUrl =
       dotenv.env['API_BASE_URL'] ?? "http://127.0.0.1:8000/api";
 
-  // ! NEW: Centralized User-Friendly Error Handler
+  // ! MARK: Error Handler
+  // ? Centralized user-friendly error messages
   static ApiResponse<T> _handleError<T>(http.Response response) {
     String message = 'Something went wrong. Please try again.';
     
@@ -20,11 +22,9 @@ class ApiService {
       final body = jsonDecode(response.body);
 
       if (response.statusCode == 422) {
-        // Laravel Validation Errors
         if (body['validation'] != null && body['validation']['message'] != null) {
           message = body['validation']['message'];
         } else if (body['errors'] != null) {
-          // Get the first validation error message
           var errors = body['errors'] as Map<String, dynamic>;
           message = errors.values.first[0];
         } else {
@@ -42,7 +42,6 @@ class ApiService {
         message = body['error'];
       }
     } catch (_) {
-      // If JSON parsing fails, use status code based message
       if (response.statusCode == 500) {
         message = "Server error. Please try again later.";
       }
@@ -55,7 +54,8 @@ class ApiService {
     );
   }
 
-  // Helper for debug logs
+  // ! MARK: Helper Functions
+  // ? Logging helper for debug output
   static String _shortForLogging(dynamic parsed) {
     try {
       if (parsed == null) return '<empty response>';
@@ -71,12 +71,12 @@ class ApiService {
     }
   }
 
-  // ! MARK: REGISTER
+  // ! MARK: Authentication
   static Future<ApiResponse<Map<String, dynamic>>> register({
     required String name,
     required String email,
     required String password,
-    required String userType, // 'seeker' or 'recruiter'
+    required String userType,
   }) async {
     try {
       final url = Uri.parse('$baseUrl/register');
@@ -112,7 +112,6 @@ class ApiService {
     }
   }
 
-  // ! MARK: LOGIN
   static Future<ApiResponse<Map<String, dynamic>>> login({
     required String email,
     required String password,
@@ -130,7 +129,7 @@ class ApiService {
         final body = jsonDecode(response.body);
         debugPrint('login returning: ${_shortForLogging(body)}');
 
-        // Try to detect token and user id in common response shapes and save them
+        // ? Extract and save token, user ID, and user type
         try {
           if (body is Map<String, dynamic>) {
             String? token;
@@ -156,7 +155,8 @@ class ApiService {
 
             if (token != null) await saveToken(token);
             if (userId != null) await saveUserId(userId);
-            // detect and save user_type when present
+            
+            // ? Save user type (seeker/recruiter)
             try {
               String? utype;
               if (body['user'] is Map && body['user']['user_type'] is String) {
@@ -193,7 +193,7 @@ class ApiService {
     }
   }
 
-  // ! MARK: All Jobs
+  // ! MARK: Jobs
   static Future<ApiResponse<List<Job>>> fetchJobs() async {
     try {
       final url = Uri.parse('$baseUrl/jobs');
@@ -211,6 +211,7 @@ class ApiService {
         final decoded = jsonDecode(response.body);
         final List<Map<String, dynamic>> normalized = [];
 
+        // ? Normalize job data structure from various API formats
         try {
           if (decoded is List) {
             for (var item in decoded) {
@@ -282,7 +283,6 @@ class ApiService {
     }
   }
 
-  // ! MARK: Fetch single job details
   static Future<ApiResponse<Map<String, dynamic>>> fetchJobDetails({
     required int jobId,
   }) async {

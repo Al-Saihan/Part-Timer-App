@@ -7,6 +7,7 @@ import 'forgot_password.dart';
 import '../services/api_service.dart';
 import '../includes/auth.dart';
 
+// ! MARK: Sign In
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
@@ -28,13 +29,11 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
-  // ! MARK: On-Submit
+  // ! MARK: Login Handler
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _loading = true;
-    });
+    setState(() => _loading = true);
 
     final response = await ApiService.login(
       email: _emailController.text.trim(),
@@ -43,13 +42,10 @@ class _SignInPageState extends State<SignInPage> {
 
     if (!mounted) return;
     
-    setState(() {
-      _loading = false;
-    });
+    setState(() => _loading = false);
 
     if (response.success) {
-      // ? On successful login, navigate to HomePage
-      // decide where to go based on saved user_type
+      // ? Navigate to appropriate home screen based on user type
       final type = await getUserType();
       if (type == 'recruiter') {
         Navigator.of(context).pushReplacement(
@@ -77,7 +73,7 @@ class _SignInPageState extends State<SignInPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // ? MARK: Background
+          // ! MARK: Background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -88,7 +84,7 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
 
-          // ? Soft decorative circle 1
+          // ? Decorative blur circles
           Positioned(
             top: -80,
             left: -60,
@@ -105,7 +101,6 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
 
-          // ? Soft decorative circle 2
           Positioned(
             bottom: -40,
             right: -50,
@@ -122,7 +117,7 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
 
-          // ? MARK: Sign-in
+          // ! MARK: Form
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -210,14 +205,14 @@ class _SignInPageState extends State<SignInPage> {
                               return null;
                             },
                           ),
-                          // ! MARK: Actions x 2
+                          // ! MARK: Actions
                           const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TextButton(
                                 onPressed: () {
-                                  // ?----------------- Navigate to SignUpPage -----------------?
+                                  // ? Navigate to sign up page
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => const SignUpPage(),

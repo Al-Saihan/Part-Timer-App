@@ -7,6 +7,8 @@ import 'sign_in.dart';
 import 'ratings_screen.dart';
 import 'chat_rooms_screen.dart';
 
+// ! MARK: Formatting
+// ? Format date values for display
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
   try {
@@ -45,6 +47,8 @@ String _formatDate(dynamic raw) {
   }
 }
 
+// ! MARK: Avatar Builder
+// ? Build profile avatar from user data
 Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
   // Prefer using `profile_pic` (asset name) when present
   if (user != null) {
@@ -70,7 +74,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
     }
   }
 
-  // Fallback: support various remote image keys
+  // ? Fallback: support various remote image keys
   String? img;
   if (user != null) {
     img =

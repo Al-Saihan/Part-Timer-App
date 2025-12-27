@@ -1,3 +1,4 @@
+// ! MARK: ChatRoom Model
 class ChatRoom {
   final int id;
   final Map<String, dynamic> otherUser;
@@ -16,10 +17,10 @@ class ChatRoom {
   });
 
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
-    // Handle other_participant from API
+    // ? Parse other participant from various API formats
     final otherParticipant = json['other_participant'] ?? json['other_user'] ?? json['otherUser'] ?? {};
     
-    // Handle latest_message from API
+    // ? Extract latest message content and timestamp
     final latestMsg = json['latest_message'] ?? json['last_message'] ?? json['lastMessage'];
     String? lastMsgContent;
     DateTime? lastMsgTime;
@@ -44,6 +45,7 @@ class ChatRoom {
   }
 }
 
+// ! MARK: ChatMessage Model
 class ChatMessage {
   final int id;
   final int roomId;
@@ -64,7 +66,7 @@ class ChatMessage {
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json, {int? currentUserId}) {
-    // Handle different field types - convert to int safely
+    // ? Safely convert field types to int
     final id = json['id'];
     final messageId = id is int ? id : int.tryParse(id?.toString() ?? '0') ?? 0;
     

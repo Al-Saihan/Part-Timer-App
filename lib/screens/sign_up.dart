@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'sign_in.dart';
 import '../services/api_service.dart';
 
+// ! MARK: Sign Up
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -11,7 +12,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  String? _role; // 'recruiter' or 'seeker'
+  String? _role;
   final _formKey = GlobalKey<FormState>();
   final _firstController = TextEditingController();
   final _lastController = TextEditingController();
@@ -33,7 +34,7 @@ class _SignUpPageState extends State<SignUpPage> {
     setState(() => _role = role);
   }
 
-  // ! MARK: On-Submit
+  // ! MARK: Register Handler
   void _submit() async {
     if (!_formKey.currentState!.validate() || _role == null) return;
 
@@ -85,7 +86,7 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
       body: Stack(
         children: [
-          // ? MARK: Background
+          // ! MARK: Background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -96,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
 
-          // ? Soft decorative circle 1
+          // ? Decorative blur circles
           Positioned(
             top: -80,
             left: -60,
@@ -113,7 +114,6 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
 
-          // ? Soft decorative circle 2
           Positioned(
             bottom: -40,
             right: -50,
@@ -130,7 +130,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
 
-          // ? MARK: Sign-up
+          // ! MARK: Form
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -156,6 +156,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        // ! MARK: Role Selection
                         Row(
                           children: [
                             Expanded(

@@ -8,12 +8,13 @@ import 'ratings_screen.dart';
 import 'chat_rooms_screen.dart';
 import 'chat_screen.dart';
 
+// ! MARK: Formatting
+// ? Format date values with time for recruiter view
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
   try {
     DateTime dt;
     if (raw is int) {
-      // assume epoch seconds or ms
       dt = DateTime.fromMillisecondsSinceEpoch(
         raw > 9999999999 ? raw : raw * 1000,
         isUtc: true,

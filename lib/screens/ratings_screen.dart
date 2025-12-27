@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
+// ! MARK: Ratings Screen
 class RatingsScreen extends StatefulWidget {
   final int initialTab;
   const RatingsScreen({super.key, this.initialTab = 0});
@@ -31,6 +32,7 @@ class _RatingsScreenState extends State<RatingsScreen>
     _aboutMeFuture = _fetchAboutMe();
   }
 
+  // ! MARK: Data Fetching
   Future<List<Map<String, dynamic>>> _fetchEligible() async {
     final response = await ApiService.fetchEligibleRatings();
     if (!response.success && mounted) {
@@ -68,6 +70,8 @@ class _RatingsScreenState extends State<RatingsScreen>
     super.dispose();
   }
 
+  // ! MARK: Helper Methods
+  // ? Format date for display
   String _formatDate(dynamic raw) {
     if (raw == null) return '';
     try {
@@ -87,16 +91,17 @@ class _RatingsScreenState extends State<RatingsScreen>
     }
   }
 
+  // ? Build star rating widget
   Widget _stars(int rating) {
     return Row(mainAxisSize: MainAxisSize.min, children: List.generate(5, (i) {
       return Icon(i < rating ? Icons.star : Icons.star_border, color: Colors.amber, size: 16);
     }));
   }
 
+  // ? Build avatar from user data
   Widget _avatarFromMap(dynamic user, {double radius = 20}) {
     try {
       if (user is Map) {
-        // Prefer `profile_pic` asset name when present
         final profilePic = user['profile_pic']?.toString();
         if (profilePic != null && profilePic.isNotEmpty) {
           final assetPath = 'assets/avatars/$profilePic.png';
@@ -115,7 +120,6 @@ class _RatingsScreenState extends State<RatingsScreen>
           );
         }
 
-        // Otherwise prefer remote image keys
         final img = user['avatar'] ?? user['profile_picture'] ?? user['photo'] ?? user['image'] ?? user['picture'];
         if (img is String && img.isNotEmpty) {
           String url = img;
@@ -158,7 +162,7 @@ class _RatingsScreenState extends State<RatingsScreen>
       ),
       body: Stack(
         children: [
-          // ? MARK: Background
+          // ! MARK: Background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -169,7 +173,7 @@ class _RatingsScreenState extends State<RatingsScreen>
             ),
           ),
 
-          // ? Soft decorative circle 1
+          // ? Decorative blur circles
           Positioned(
             top: -80,
             left: -60,
@@ -186,7 +190,6 @@ class _RatingsScreenState extends State<RatingsScreen>
             ),
           ),
 
-          // ? Soft decorative circle 2
           Positioned(
             bottom: -40,
             right: -50,

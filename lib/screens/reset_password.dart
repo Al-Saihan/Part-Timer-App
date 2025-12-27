@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
+// ! MARK: Reset Password
 class ResetPasswordPage extends StatefulWidget {
   final String email;
   const ResetPasswordPage({super.key, required this.email});
@@ -24,6 +25,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     super.dispose();
   }
 
+  // ! MARK: Submit Handler
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -42,6 +44,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         scaffold.showSnackBar(
           SnackBar(content: Text(response.message)),
         );
+        // ? Return to sign in screen
         Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         scaffold.showSnackBar(
@@ -66,7 +69,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ),
       body: Stack(
         children: [
-          // ? MARK: Background
+          // ! MARK: Background
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -77,7 +80,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             ),
           ),
 
-          // ? Soft decorative circle 1
+          // ? Decorative blur circles
           Positioned(
             top: -80,
             left: -60,
@@ -94,7 +97,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             ),
           ),
 
-          // ? Soft decorative circle 2
           Positioned(
             bottom: -40,
             right: -50,
@@ -111,7 +113,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             ),
           ),
 
-          // ? MARK: Content
+          // ! MARK: Form
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
