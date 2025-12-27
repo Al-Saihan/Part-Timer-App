@@ -38,7 +38,7 @@ String _formatDate(dynamic raw) {
       'Dec',
     ];
     final m = months[dt.month - 1];
-    return '${dt.day} $m ${dt.year}}';
+    return '${dt.day} $m ${dt.year}';
   } catch (_) {
     return raw.toString();
   }
@@ -81,7 +81,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
   }
 
   if (img == null || img.isEmpty) {
-    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 18));
+    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 48));
   }
 
   String url = img;
@@ -285,20 +285,20 @@ class _HomeTabState extends State<HomeTab> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 6),
                                     Text(
                                       user['email']?.toString() ?? 'No email',
                                       style: const TextStyle(
-                                        color: Colors.grey,
+                                        color: Color.fromARGB(255, 111, 111, 111),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Role: ${user['user_type'] ?? user['type'] ?? 'unknown'}',
+                                      'Role: ${(user['user_type'] ?? user['type'] ?? 'unknown').toString().toUpperCase()}',
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Created: ${_formatDate(user['created_at'] ?? user['createdAt'] ?? user['created'] ?? user['registered_at'] ?? '')}',
+                                      'ID Created: ${_formatDate(user['created_at']) }',
                                     ),
                                   ],
                                 ),
@@ -332,10 +332,21 @@ class _HomeTabState extends State<HomeTab> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: Text(
                 'Available Jobs',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(1, 1),
+                      blurRadius: 3,
+                      color: Colors.black.withAlpha(77),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -605,7 +616,28 @@ class _AppliedJobsTabState extends State<AppliedJobsTab> {
                     ),
                     child: Row(
                       children: [
-                        const CircleAvatar(child: Icon(Icons.work)),
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(15),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.work,
+                              size: 28,
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -637,15 +669,15 @@ class _AppliedJobsTabState extends State<AppliedJobsTab> {
                           ),
                           decoration: BoxDecoration(
                             color: status.toLowerCase() == 'pending'
-                                ? Colors.orange[50]
+                                ? const Color.fromARGB(255, 172, 106, 1)
                                 : (status.toLowerCase() == 'accepted'
-                                      ? Colors.green[50]
-                                      : Colors.red[50]),
+                                      ? const Color.fromARGB(255, 64, 184, 74)
+                                      : const Color.fromARGB(255, 219, 44, 70)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             status.toUpperCase(),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 255, 255, 255)),
                           ),
                         ),
                       ],
@@ -814,11 +846,11 @@ class _ProfileTabState extends State<ProfileTab> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Role: ${user?['user_type'] ?? user?['type'] ?? 'unknown'}',
+                                'Role: ${user?['user_type']}',
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Created: ${_formatDate(user?['created_at'] ?? user?['createdAt'] ?? user?['created'] ?? '')}',
+                                'ID Created: ${_formatDate(user?['created_at'])}',
                               ),
                             ],
                           ),
@@ -922,7 +954,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Bio'),
+                                  : const Text('Update Bio', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -980,7 +1012,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Skills'),
+                                  : const Text('Update Skills', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -1038,7 +1070,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Locations'),
+                                  : const Text('Update Locations', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -1064,6 +1096,7 @@ class _ProfileTabState extends State<ProfileTab> {
           builder: (ctx2, setState) {
             return AlertDialog(
               title: const Text('Choose Avatar'),
+              backgroundColor: const Color.fromARGB(255, 193, 229, 255),
               content: SizedBox(
                 width: double.maxFinite,
                 height: 420,
@@ -1142,7 +1175,7 @@ class _ProfileTabState extends State<ProfileTab> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx2),
-                  child: const Text('Close'),
+                  child: const Text('Close', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             );
@@ -1164,19 +1197,49 @@ Drawer _buildDrawer(BuildContext context) {
     child: ListView(
       padding: EdgeInsets.zero,
       children: [
-        const DrawerHeader(
-          decoration: BoxDecoration(
-            
+        DrawerHeader(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [Color.fromARGB(255, 67, 163, 208), Color.fromARGB(255, 0, 101, 147)],
             ),
           ),
-          
-          child: Text(
-            'Quick Settings',
-            style: TextStyle(color: Colors.white, fontSize: 24),
+          child: FutureBuilder<Map<String, dynamic>?>(
+            future: ApiService.fetchCurrentUser().then((r) => r.data),
+            builder: (ctx, snap) {
+              final user = snap.data;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildProfileAvatar(user, radius: 36),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user == null ? 'Seeker' : (user['name']?.toString() ?? 'Seeker'),
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user == null ? '' : (user['email']?.toString() ?? ''),
+                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Quick actions', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
         Padding(
@@ -1256,9 +1319,6 @@ Future<void> _showJobDetails(
   bool showApply = true,
 }) async {
   final scaffold = ScaffoldMessenger.of(context);
-  scaffold.showSnackBar(
-    const SnackBar(content: Text('Loading job details...')),
-  );
 
   Map<String, dynamic>? details;
   final detailsResponse = await ApiService.fetchJobDetails(jobId: job.id);
@@ -1271,11 +1331,7 @@ Future<void> _showJobDetails(
 
   String createdStr = '';
   if (details != null) {
-    createdStr = _formatDate(
-      details['created_at'] ??
-          details['createdAt'] ??
-          details['posted_at'] ??
-          '',
+    createdStr = _formatDate(details['created_at'],
     );
   }
   // Extract recruiter and job location when details available —
@@ -1410,12 +1466,103 @@ Future<void> _showJobDetails(
 
                 // Info chips (wrap to avoid overflow)
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
+                  spacing: 10,
+                  runSpacing: 8,
+                  direction: Axis.vertical,
                   children: [
-                    Chip(label: Text(difficulty.toString())),
-                    Chip(label: Text('$workingHours hrs/day')),
-                    Chip(label: Text('$payment per hour')),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color.fromARGB(255, 100, 181, 246), Color.fromARGB(255, 33, 150, 243)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withAlpha(77),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.trending_up, size: 16, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Job Difficulty: ${difficulty.toString().toUpperCase()}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color.fromARGB(255, 100, 181, 246), Color.fromARGB(255, 33, 150, 243)]
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withAlpha(77),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time, size: 16, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            ' Job Timing: $workingHours hrs/day',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                        colors: [Color.fromARGB(255, 100, 181, 246), Color.fromARGB(255, 33, 150, 243)]
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withAlpha(77),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.payments, size: 16, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Payment: $payment/hour',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -1426,7 +1573,7 @@ Future<void> _showJobDetails(
                     Expanded(
                       child: TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Close'),
+                        child: const Text('Close', style: TextStyle(color: Colors.blue)),
                       ),
                     ),
                     if (showApply) ...[
@@ -1436,8 +1583,8 @@ Future<void> _showJobDetails(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                           ),
-                          icon: const Icon(Icons.send),
-                          label: const Text('Apply'),
+                          icon: const Icon(Icons.send, color: Colors.white),
+                          label: const Text('Apply', style: TextStyle(color: Colors.white)),
                           onPressed: () async {
                             Navigator.pop(context);
                             scaffold.showSnackBar(
