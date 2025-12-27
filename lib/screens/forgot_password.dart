@@ -27,18 +27,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     final scaffold = ScaffoldMessenger.of(context);
-    
+
     final response = await ApiService.forgotPassword(
       email: _emailCtrl.text.trim(),
     );
-    
+
     if (mounted) {
       setState(() => _loading = false);
 
       if (response.success) {
-        scaffold.showSnackBar(
-          SnackBar(content: Text(response.message)),
-        );
+        scaffold.showSnackBar(SnackBar(content: Text(response.message)));
         // ? Navigate to reset password screen
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -170,7 +168,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   side: const BorderSide(color: Colors.blue),
                                 ),
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel', style: TextStyle(color: Colors.blue),),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(color: Colors.blue),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -189,7 +190,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text('Next', style: TextStyle(color: Colors.white),),
+                                    : const Text(
+                                        'Next',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                               ),
                             ),
                           ],
@@ -206,4 +210,3 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 }
-

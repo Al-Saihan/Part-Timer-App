@@ -17,12 +17,13 @@ class ApiService {
   // ? Centralized user-friendly error messages
   static ApiResponse<T> _handleError<T>(http.Response response) {
     String message = 'Something went wrong. Please try again.';
-    
+
     try {
       final body = jsonDecode(response.body);
 
       if (response.statusCode == 422) {
-        if (body['validation'] != null && body['validation']['message'] != null) {
+        if (body['validation'] != null &&
+            body['validation']['message'] != null) {
           message = body['validation']['message'];
         } else if (body['errors'] != null) {
           var errors = body['errors'] as Map<String, dynamic>;
@@ -155,7 +156,7 @@ class ApiService {
 
             if (token != null) await saveToken(token);
             if (userId != null) await saveUserId(userId);
-            
+
             // ? Save user type (seeker/recruiter)
             try {
               String? utype;
@@ -164,7 +165,8 @@ class ApiService {
               }
               if (body['data'] is Map) {
                 final data = body['data'] as Map<String, dynamic>;
-                if (data['user'] is Map && data['user']['user_type'] is String) {
+                if (data['user'] is Map &&
+                    data['user']['user_type'] is String) {
                   utype = data['user']['user_type'];
                 }
                 if (data['user_type'] is String) utype = data['user_type'];
@@ -219,7 +221,8 @@ class ApiService {
                 Map<String, dynamic> jobMap;
                 if (item.containsKey('job')) {
                   jobMap = Map<String, dynamic>.from(item['job']);
-                  if (item.containsKey('recruiter') && item['recruiter'] != null) {
+                  if (item.containsKey('recruiter') &&
+                      item['recruiter'] != null) {
                     jobMap['recruiter'] = item['recruiter'];
                   } else if (item.containsKey('user') && item['user'] != null) {
                     jobMap['recruiter'] = item['user'];
@@ -233,7 +236,9 @@ class ApiService {
           } else if (decoded is Map) {
             if (decoded.containsKey('job')) {
               final item = decoded;
-              final Map<String, dynamic> jobMap = Map<String, dynamic>.from(item['job']);
+              final Map<String, dynamic> jobMap = Map<String, dynamic>.from(
+                item['job'],
+              );
               if (item.containsKey('recruiter') && item['recruiter'] != null) {
                 jobMap['recruiter'] = item['recruiter'];
               } else if (item.containsKey('user') && item['user'] != null) {
@@ -246,9 +251,11 @@ class ApiService {
                   Map<String, dynamic> jobMap;
                   if (value.containsKey('job')) {
                     jobMap = Map<String, dynamic>.from(value['job']);
-                    if (value.containsKey('recruiter') && value['recruiter'] != null) {
+                    if (value.containsKey('recruiter') &&
+                        value['recruiter'] != null) {
                       jobMap['recruiter'] = value['recruiter'];
-                    } else if (value.containsKey('user') && value['user'] != null) {
+                    } else if (value.containsKey('user') &&
+                        value['user'] != null) {
                       jobMap['recruiter'] = value['user'];
                     }
                   } else {
@@ -340,10 +347,7 @@ class ApiService {
       if (response.statusCode == 200) {
         await clearUserId();
         debugPrint('logout successful');
-        return ApiResponse(
-          success: true,
-          message: 'Logged out successfully.',
-        );
+        return ApiResponse(success: true, message: 'Logged out successfully.');
       } else {
         return _handleError(response);
       }
@@ -368,7 +372,7 @@ class ApiService {
 
       final url = Uri.parse('$baseUrl/me');
       final response = await http.get(url, headers: headers);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('fetchCurrentUser parsed: ${_shortForLogging(parsed)}');
@@ -388,15 +392,14 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('fetchCurrentUser error: $e');
-      return ApiResponse(
-        success: false,
-        message: 'Could not load user data.',
-      );
+      return ApiResponse(success: false, message: 'Could not load user data.');
     }
   }
 
   // ! MARK: Job Apply
-  static Future<ApiResponse<Map<String, dynamic>>> applyJob({required int jobId}) async {
+  static Future<ApiResponse<Map<String, dynamic>>> applyJob({
+    required int jobId,
+  }) async {
     try {
       final url = Uri.parse('$baseUrl/jobs/$jobId/apply');
       final token = await getToken();
@@ -448,7 +451,9 @@ class ApiService {
       if (response.statusCode == 200) {
         try {
           final parsed = jsonDecode(response.body);
-          final result = (parsed is Map<String, dynamic>) ? parsed : {'message': 'Applied'};
+          final result = (parsed is Map<String, dynamic>)
+              ? parsed
+              : {'message': 'Applied'};
           debugPrint('applyJob returning: ${_shortForLogging(result)}');
           return ApiResponse(
             success: true,
@@ -526,7 +531,8 @@ class ApiService {
   }
 
   // ! MARK: Fetch eligible rating candidates for authenticated user
-  static Future<ApiResponse<List<Map<String, dynamic>>>> fetchEligibleRatings() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchEligibleRatings() async {
     try {
       final url = Uri.parse('$baseUrl/ratings/eligible');
       final token = await getToken();
@@ -538,13 +544,15 @@ class ApiService {
       };
 
       final response = await http.get(url, headers: headers);
-      
+
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         debugPrint('fetchEligibleRatings returning: ${_shortForLogging(data)}');
         return ApiResponse(
           success: true,
-          data: data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList(),
+          data: data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(),
           message: 'Eligible ratings loaded.',
         );
       } else if (response.statusCode == 401) {
@@ -566,7 +574,8 @@ class ApiService {
   }
 
   // ! MARK: Fetch ratings created by authenticated user
-  static Future<ApiResponse<List<Map<String, dynamic>>>> fetchMyRatings() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchMyRatings() async {
     try {
       final url = Uri.parse('$baseUrl/ratings/mine');
       final token = await getToken();
@@ -578,13 +587,15 @@ class ApiService {
       };
 
       final response = await http.get(url, headers: headers);
-      
+
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         debugPrint('fetchMyRatings returning: ${_shortForLogging(data)}');
         return ApiResponse(
           success: true,
-          data: data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList(),
+          data: data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(),
           message: 'Your ratings loaded.',
         );
       } else {
@@ -600,7 +611,8 @@ class ApiService {
   }
 
   // ! MARK: Fetch ratings about authenticated user
-  static Future<ApiResponse<List<Map<String, dynamic>>>> fetchRatingsAboutMe() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchRatingsAboutMe() async {
     try {
       final url = Uri.parse('$baseUrl/ratings/about-me');
       final token = await getToken();
@@ -612,13 +624,15 @@ class ApiService {
       };
 
       final response = await http.get(url, headers: headers);
-      
+
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         debugPrint('fetchRatingsAboutMe returning: ${_shortForLogging(data)}');
         return ApiResponse(
           success: true,
-          data: data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList(),
+          data: data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(),
           message: 'Ratings about you loaded.',
         );
       } else {
@@ -677,7 +691,9 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
           final parsed = jsonDecode(response.body);
-          final result = parsed is Map<String, dynamic> ? parsed : {'success': true};
+          final result = parsed is Map<String, dynamic>
+              ? parsed
+              : {'success': true};
           debugPrint('createJob returning: ${_shortForLogging(result)}');
           return ApiResponse(
             success: true,
@@ -703,7 +719,8 @@ class ApiService {
   }
 
   // ! MARK: Fetch Posted Jobs (recruiter)
-  static Future<ApiResponse<List<Map<String, dynamic>>>> fetchPostedJobs() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchPostedJobs() async {
     try {
       final url = Uri.parse('$baseUrl/jobs/posted');
       final token = await getToken();
@@ -721,7 +738,9 @@ class ApiService {
         debugPrint('fetchPostedJobs returning ${data.length} items');
         return ApiResponse(
           success: true,
-          data: data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList(),
+          data: data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(),
           message: 'Posted jobs loaded.',
         );
       } else {
@@ -737,7 +756,8 @@ class ApiService {
   }
 
   // ! MARK: Fetch Applicants (for recruiter's jobs)
-  static Future<ApiResponse<List<Map<String, dynamic>>>> fetchApplicants() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchApplicants() async {
     try {
       final url = Uri.parse('$baseUrl/applicants');
       final token = await getToken();
@@ -755,7 +775,9 @@ class ApiService {
         debugPrint('fetchApplicants returning ${data.length} items');
         return ApiResponse(
           success: true,
-          data: data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList(),
+          data: data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(),
           message: 'Applicants loaded.',
         );
       } else {
@@ -763,15 +785,13 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('fetchApplicants error: $e');
-      return ApiResponse(
-        success: false,
-        message: 'Could not load applicants.',
-      );
+      return ApiResponse(success: false, message: 'Could not load applicants.');
     }
   }
 
   // ! MARK: Fetch applications for current seeker (applied jobs)
-  static Future<ApiResponse<List<Map<String, dynamic>>>> fetchAppliedJobs() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchAppliedJobs() async {
     try {
       final url = Uri.parse('$baseUrl/jobs/applied');
       final token = await getToken();
@@ -789,7 +809,9 @@ class ApiService {
         debugPrint('fetchAppliedJobs returning ${data.length} items');
         return ApiResponse(
           success: true,
-          data: data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList(),
+          data: data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(),
           message: 'Applied jobs loaded.',
         );
       } else {
@@ -825,8 +847,12 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
           final parsed = jsonDecode(response.body);
-          final result = parsed is Map<String, dynamic> ? parsed : {'success': true};
-          debugPrint('updateApplicationStatus returning: ${_shortForLogging(result)}');
+          final result = parsed is Map<String, dynamic>
+              ? parsed
+              : {'success': true};
+          debugPrint(
+            'updateApplicationStatus returning: ${_shortForLogging(result)}',
+          );
           return ApiResponse(
             success: true,
             data: result,
@@ -864,7 +890,7 @@ class ApiService {
       final body = jsonEncode({'email': email});
 
       final response = await http.post(url, headers: headers, body: body);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('forgotPassword returning: ${_shortForLogging(parsed)}');
@@ -904,7 +930,7 @@ class ApiService {
       });
 
       final response = await http.post(url, headers: headers, body: body);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('resetPassword returning: ${_shortForLogging(parsed)}');
@@ -926,7 +952,9 @@ class ApiService {
   }
 
   // ! MARK: Update user bio
-  static Future<ApiResponse<Map<String, dynamic>>> updateBio({required String? bio}) async {
+  static Future<ApiResponse<Map<String, dynamic>>> updateBio({
+    required String? bio,
+  }) async {
     try {
       final url = Uri.parse('$baseUrl/user/bio');
       final token = await getToken();
@@ -938,7 +966,7 @@ class ApiService {
       final body = jsonEncode({'bio': bio});
 
       final response = await http.patch(url, headers: headers, body: body);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('updateBio returning: ${_shortForLogging(parsed)}');
@@ -974,7 +1002,7 @@ class ApiService {
       final body = jsonEncode({'skills': skills});
 
       final response = await http.patch(url, headers: headers, body: body);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('updateSkills returning: ${_shortForLogging(parsed)}');
@@ -1010,7 +1038,7 @@ class ApiService {
       final body = jsonEncode({'location': location});
 
       final response = await http.patch(url, headers: headers, body: body);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('updateLocation returning: ${_shortForLogging(parsed)}');
@@ -1046,7 +1074,7 @@ class ApiService {
       final body = jsonEncode({'profile_pic': profilePic});
 
       final response = await http.patch(url, headers: headers, body: body);
-      
+
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         debugPrint('updateProfilePic returning: ${_shortForLogging(parsed)}');
@@ -1074,10 +1102,7 @@ class ApiService {
     try {
       final token = await getToken();
       if (token == null) {
-        return ApiResponse(
-          success: false,
-          message: 'Not authenticated',
-        );
+        return ApiResponse(success: false, message: 'Not authenticated');
       }
 
       final response = await http.get(
@@ -1092,7 +1117,9 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
-        final rooms = (parsed['chat_rooms'] ?? parsed['data'] ?? parsed['rooms'] ?? []) as List;
+        final rooms =
+            (parsed['chat_rooms'] ?? parsed['data'] ?? parsed['rooms'] ?? [])
+                as List;
         return ApiResponse(
           success: true,
           data: rooms.map((r) => ChatRoom.fromJson(r)).toList(),
@@ -1103,10 +1130,7 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('fetchChatRooms error: $e');
-      return ApiResponse(
-        success: false,
-        message: 'Failed to load chat rooms',
-      );
+      return ApiResponse(success: false, message: 'Failed to load chat rooms');
     }
   }
 
@@ -1117,10 +1141,7 @@ class ApiService {
     try {
       final token = await getToken();
       if (token == null) {
-        return ApiResponse(
-          success: false,
-          message: 'Not authenticated',
-        );
+        return ApiResponse(success: false, message: 'Not authenticated');
       }
 
       final response = await http.post(
@@ -1137,7 +1158,8 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final parsed = jsonDecode(response.body);
-        final roomData = parsed['chat_room'] ?? parsed['data'] ?? parsed['room'] ?? parsed;
+        final roomData =
+            parsed['chat_room'] ?? parsed['data'] ?? parsed['room'] ?? parsed;
         return ApiResponse(
           success: true,
           data: ChatRoom.fromJson(roomData),
@@ -1148,10 +1170,7 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('createOrGetChatRoom error: $e');
-      return ApiResponse(
-        success: false,
-        message: 'Failed to create chat room',
-      );
+      return ApiResponse(success: false, message: 'Failed to create chat room');
     }
   }
 
@@ -1163,10 +1182,7 @@ class ApiService {
     try {
       final token = await getToken();
       if (token == null) {
-        return ApiResponse(
-          success: false,
-          message: 'Not authenticated',
-        );
+        return ApiResponse(success: false, message: 'Not authenticated');
       }
 
       final response = await http.get(
@@ -1182,7 +1198,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final parsed = jsonDecode(response.body);
         final messages = (parsed['messages'] ?? parsed['data'] ?? []) as List;
-        
+
         // Get current user ID for isMe property
         final currentUserResponse = await fetchCurrentUser();
         final currentUserId = currentUserResponse.data?['id'];
@@ -1199,10 +1215,7 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('fetchChatMessages error: $e');
-      return ApiResponse(
-        success: false,
-        message: 'Failed to load messages',
-      );
+      return ApiResponse(success: false, message: 'Failed to load messages');
     }
   }
 
@@ -1215,10 +1228,7 @@ class ApiService {
     try {
       final token = await getToken();
       if (token == null) {
-        return ApiResponse(
-          success: false,
-          message: 'Not authenticated',
-        );
+        return ApiResponse(success: false, message: 'Not authenticated');
       }
 
       final response = await http.post(
@@ -1228,10 +1238,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'content': content,
-          'message_type': messageType,
-        }),
+        body: jsonEncode({'content': content, 'message_type': messageType}),
       );
 
       debugPrint('sendChatMessage status: ${response.statusCode}');
@@ -1240,20 +1247,21 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final parsed = jsonDecode(response.body);
         debugPrint('sendChatMessage parsed: $parsed');
-        
+
         // Check if response has success field and it's true
-        final isSuccess = parsed['success'] == true || response.statusCode == 201;
-        
+        final isSuccess =
+            parsed['success'] == true || response.statusCode == 201;
+
         if (!isSuccess) {
           return ApiResponse(
             success: false,
             message: parsed['message'] ?? 'Failed to send message',
           );
         }
-        
+
         final messageData = parsed['message'] ?? parsed['data'] ?? parsed;
         debugPrint('sendChatMessage messageData: $messageData');
-        
+
         final currentUserResponse = await fetchCurrentUser();
         final currentUserId = currentUserResponse.data?['id'];
 
@@ -1269,10 +1277,7 @@ class ApiService {
     } catch (e, stackTrace) {
       debugPrint('sendChatMessage error: $e');
       debugPrint('sendChatMessage stackTrace: $stackTrace');
-      return ApiResponse(
-        success: false,
-        message: 'Failed to send message',
-      );
+      return ApiResponse(success: false, message: 'Failed to send message');
     }
   }
 
@@ -1284,10 +1289,7 @@ class ApiService {
     try {
       final token = await getToken();
       if (token == null) {
-        return ApiResponse(
-          success: false,
-          message: 'Not authenticated',
-        );
+        return ApiResponse(success: false, message: 'Not authenticated');
       }
 
       final response = await http.delete(
@@ -1301,19 +1303,13 @@ class ApiService {
       debugPrint('deleteChatMessage status: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        return ApiResponse(
-          success: true,
-          message: 'Message deleted',
-        );
+        return ApiResponse(success: true, message: 'Message deleted');
       } else {
         return _handleError(response);
       }
     } catch (e) {
       debugPrint('deleteChatMessage error: $e');
-      return ApiResponse(
-        success: false,
-        message: 'Failed to delete message',
-      );
+      return ApiResponse(success: false, message: 'Failed to delete message');
     }
   }
 }

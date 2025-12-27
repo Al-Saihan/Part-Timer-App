@@ -51,9 +51,9 @@ class _SignUpPageState extends State<SignUpPage> {
       setState(() => _loading = false);
 
       if (response.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(response.message)));
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const SignInPage()),
         );
@@ -182,7 +182,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                     children: const [
                                       Icon(
                                         Icons.search,
-                                        color: Color.fromARGB(255, 255, 255, 255),
+                                        color: Color.fromARGB(
+                                          255,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                         size: 30,
                                       ),
                                       SizedBox(height: 8),
@@ -190,7 +195,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                         'I am looking for jobs\n[Seeker]',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          color: Color.fromARGB(255, 255, 255, 255),
+                                          color: Color.fromARGB(
+                                            255,
+                                            255,
+                                            255,
+                                            255,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -222,7 +232,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                     children: const [
                                       Icon(
                                         Icons.work,
-                                        color: Color.fromARGB(255, 255, 255, 255),
+                                        color: Color.fromARGB(
+                                          255,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
                                         size: 30,
                                       ),
                                       SizedBox(height: 8),
@@ -230,7 +245,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                         'I am looking to hire\n[Recruiter]',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          color: Color.fromARGB(255, 255, 255, 255),
+                                          color: Color.fromARGB(
+                                            255,
+                                            255,
+                                            255,
+                                            255,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -366,4 +386,3 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
-

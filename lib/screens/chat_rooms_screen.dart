@@ -31,7 +31,20 @@ String _formatDate(dynamic raw) {
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       return days[dt.weekday - 1];
     } else {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       return '${dt.day} ${months[dt.month - 1]}';
     }
   } catch (_) {
@@ -64,13 +77,17 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 24}) {
 
   String? img;
   if (user != null) {
-    img = user['avatar']?.toString() ??
+    img =
+        user['avatar']?.toString() ??
         user['profile_picture']?.toString() ??
         user['photo']?.toString();
   }
 
   if (img == null || img.isEmpty) {
-    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 18));
+    return CircleAvatar(
+      radius: radius,
+      child: const Icon(Icons.person, size: 18),
+    );
   }
 
   // ? Build network image URL
@@ -110,10 +127,7 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
     final response = await ApiService.fetchChatRooms();
     if (!response.success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
       return null;
     }
@@ -209,7 +223,11 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_bubble_outline, size: 64, color: Colors.white70),
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 64,
+                          color: Colors.white70,
+                        ),
                         SizedBox(height: 16),
                         Text(
                           'No conversations yet',
@@ -226,9 +244,10 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
                   itemBuilder: (context, index) {
                     final room = rooms[index];
                     final otherUser = room.otherUser;
-                    final name = otherUser['name']?.toString() ?? 
-                                 otherUser['email']?.toString() ?? 
-                                 'User';
+                    final name =
+                        otherUser['name']?.toString() ??
+                        otherUser['email']?.toString() ??
+                        'User';
                     final lastMsg = room.lastMessage ?? 'No messages yet';
                     final time = _formatDate(room.lastMessageAt);
                     final unread = room.unreadCount;
@@ -249,7 +268,9 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
                         title: Text(
                           name,
                           style: TextStyle(
-                            fontWeight: unread > 0 ? FontWeight.bold : FontWeight.w600,
+                            fontWeight: unread > 0
+                                ? FontWeight.bold
+                                : FontWeight.w600,
                           ),
                         ),
                         subtitle: Padding(
@@ -259,8 +280,12 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: unread > 0 ? Colors.black87 : Colors.grey[600],
-                              fontWeight: unread > 0 ? FontWeight.w500 : FontWeight.normal,
+                              color: unread > 0
+                                  ? Colors.black87
+                                  : Colors.grey[600],
+                              fontWeight: unread > 0
+                                  ? FontWeight.w500
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -274,7 +299,9 @@ class _ChatRoomsScreenState extends State<ChatRoomsScreen> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: unread > 0 ? Colors.blue : Colors.grey,
-                                  fontWeight: unread > 0 ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: unread > 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                             if (unread > 0) ...[

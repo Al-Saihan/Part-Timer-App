@@ -40,7 +40,9 @@ class Job {
 
     if (recruiterMap == null) {
       try {
-        debugPrint('Job.fromJson: recruiter missing or unexpected for job id=${json["id"]}');
+        debugPrint(
+          'Job.fromJson: recruiter missing or unexpected for job id=${json["id"]}',
+        );
       } catch (_) {}
     }
 
@@ -51,7 +53,8 @@ class Job {
       difficulty: json['difficulty'],
       workingHours: json['working_hours'] ?? json['workingHours'] ?? 0,
       payment: double.parse(json['payment'].toString()),
-      location: json['location']?.toString() ?? json['job_location']?.toString(),
+      location:
+          json['location']?.toString() ?? json['job_location']?.toString(),
       recruiter: recruiterMap,
     );
   }

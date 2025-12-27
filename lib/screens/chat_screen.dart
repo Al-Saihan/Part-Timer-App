@@ -37,13 +37,17 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 20}) {
 
   String? img;
   if (user != null) {
-    img = user['avatar']?.toString() ??
+    img =
+        user['avatar']?.toString() ??
         user['profile_picture']?.toString() ??
         user['photo']?.toString();
   }
 
   if (img == null || img.isEmpty) {
-    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 16));
+    return CircleAvatar(
+      radius: radius,
+      child: const Icon(Icons.person, size: 16),
+    );
   }
 
   String url = img;
@@ -66,11 +70,7 @@ class ChatScreen extends StatefulWidget {
   final int roomId;
   final Map<String, dynamic> otherUser;
 
-  const ChatScreen({
-    super.key,
-    required this.roomId,
-    required this.otherUser,
-  });
+  const ChatScreen({super.key, required this.roomId, required this.otherUser});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -90,7 +90,10 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _loadMessages(isInitial: true);
     // ? Auto-refresh messages every 5 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadMessages(silent: true));
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadMessages(silent: true),
+    );
   }
 
   @override
@@ -102,7 +105,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // ! MARK: Load Messages
-  Future<void> _loadMessages({bool silent = false, bool isInitial = false}) async {
+  Future<void> _loadMessages({
+    bool silent = false,
+    bool isInitial = false,
+  }) async {
     if (!silent) setState(() => _isLoading = true);
 
     final response = await ApiService.fetchChatMessages(roomId: widget.roomId);
@@ -113,22 +119,21 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages = response.data!.reversed.toList();
       });
-      
+
       // ? Scroll to bottom on first load only
       if (_isFirstLoad) {
         _isFirstLoad = false;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
-            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+            _scrollController.jumpTo(
+              _scrollController.position.maxScrollExtent,
+            );
           }
         });
       }
     } else if (!silent && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
     }
   }
@@ -206,23 +211,21 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.removeWhere((m) => m.id == message.id);
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Message deleted')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Message deleted')));
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final otherUserName = widget.otherUser['name']?.toString() ??
+    final otherUserName =
+        widget.otherUser['name']?.toString() ??
         widget.otherUser['email']?.toString() ??
         'User';
 
@@ -237,10 +240,7 @@ class _ChatScreenState extends State<ChatScreen> {
             _buildProfileAvatar(widget.otherUser, radius: 18),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                otherUserName,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(otherUserName, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
@@ -289,78 +289,81 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _messages.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No messages yet\nStart the conversation!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _messages.length,
-                            itemBuilder: (context, index) {
-                              final message = _messages[index];
-                              final isMe = message.isMe;
+                    ? const Center(
+                        child: Text(
+                          'No messages yet\nStart the conversation!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final message = _messages[index];
+                          final isMe = message.isMe;
 
-                              return Align(
-                                alignment: isMe
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: GestureDetector(
-                                  onLongPress: isMe
-                                      ? () => _deleteMessage(message)
-                                      : null,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 10,
-                                    ),
-                                    constraints: BoxConstraints(
-                                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isMe
-                                          ? const Color.fromARGB(255, 31, 143, 189)
-                                          : Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(15),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          message.content,
-                                          style: TextStyle(
-                                            color: isMe ? Colors.white : Colors.black87,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _formatMessageTime(message.createdAt),
-                                          style: TextStyle(
-                                            color: isMe
-                                                ? Colors.white70
-                                                : Colors.grey[600],
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                          return Align(
+                            alignment: isMe
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: GestureDetector(
+                              onLongPress: isMe
+                                  ? () => _deleteMessage(message)
+                                  : null,
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
                                 ),
-                              );
-                            },
-                          ),
+                                constraints: BoxConstraints(
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width * 0.75,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isMe
+                                      ? const Color.fromARGB(255, 31, 143, 189)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(15),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      message.content,
+                                      style: TextStyle(
+                                        color: isMe
+                                            ? Colors.white
+                                            : Colors.black87,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatMessageTime(message.createdAt),
+                                      style: TextStyle(
+                                        color: isMe
+                                            ? Colors.white70
+                                            : Colors.grey[600],
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
 
               // Input Area

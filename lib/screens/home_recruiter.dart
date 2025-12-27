@@ -81,16 +81,27 @@ void _showApplicantDetails(
   try {
     final rawSkills = seeker is Map ? seeker['skills'] : null;
     if (rawSkills is String) {
-      skills = rawSkills.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+      skills = rawSkills
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
     } else if (rawSkills is List) {
-      skills = rawSkills.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+      skills = rawSkills
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
     }
   } catch (_) {
     skills = [];
   }
 
-  final seekerAvgRating = seeker is Map ? (seeker['avg_rating'] ?? seeker['rating'] ?? seeker['avgRating']) : null;
-  final seekerRatingCount = seeker is Map ? (seeker['rating_count'] ?? seeker['ratingCount'] ?? 0) : 0;
+  final seekerAvgRating = seeker is Map
+      ? (seeker['avg_rating'] ?? seeker['rating'] ?? seeker['avgRating'])
+      : null;
+  final seekerRatingCount = seeker is Map
+      ? (seeker['rating_count'] ?? seeker['ratingCount'] ?? 0)
+      : 0;
 
   showDialog(
     context: context,
@@ -145,7 +156,10 @@ void _showApplicantDetails(
                     Chip(
                       label: Text(
                         status,
-                        style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                       backgroundColor: status.toLowerCase() == 'pending'
                           ? const Color.fromARGB(255, 172, 106, 1)
@@ -166,16 +180,22 @@ void _showApplicantDetails(
                 ),
                 const SizedBox(height: 12),
                 // Seeker details: location, bio, skills, ratings
-                if ((seeker is Map) && (seeker['location'] ?? seeker['address']) != null) ...[
+                if ((seeker is Map) &&
+                    (seeker['location'] ?? seeker['address']) != null) ...[
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Row(
                       children: [
-                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            (seeker['location'] ?? seeker['address']).toString(),
+                            (seeker['location'] ?? seeker['address'])
+                                .toString(),
                             style: const TextStyle(color: Colors.black87),
                           ),
                         ),
@@ -185,7 +205,8 @@ void _showApplicantDetails(
                   const SizedBox(height: 8),
                 ],
 
-                if ((seeker is Map) && (seeker['bio'] ?? '').toString().isNotEmpty) ...[
+                if ((seeker is Map) &&
+                    (seeker['bio'] ?? '').toString().isNotEmpty) ...[
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -202,7 +223,9 @@ void _showApplicantDetails(
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 6,
-                      children: skills.map((s) => Chip(label: Text(s))).toList(),
+                      children: skills
+                          .map((s) => Chip(label: Text(s)))
+                          .toList(),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -213,9 +236,15 @@ void _showApplicantDetails(
                     children: [
                       const Icon(Icons.star, size: 16, color: Colors.amber),
                       const SizedBox(width: 6),
-                      Text(seekerAvgRating.toString(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text(
+                        seekerAvgRating.toString(),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       const SizedBox(width: 6),
-                      Text('(${seekerRatingCount.toString()})', style: const TextStyle(color: Colors.grey)),
+                      Text(
+                        '(${seekerRatingCount.toString()})',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -228,16 +257,20 @@ void _showApplicantDetails(
                   children: [
                     TextButton(
                       onPressed: () async {
-                        final seekerId = seeker is Map ? (seeker['id'] ?? seeker['user_id']) : null;
+                        final seekerId = seeker is Map
+                            ? (seeker['id'] ?? seeker['user_id'])
+                            : null;
                         if (seekerId == null) {
                           ScaffoldMessenger.of(ctx2).showSnackBar(
-                            const SnackBar(content: Text('Unable to start chat')),
+                            const SnackBar(
+                              content: Text('Unable to start chat'),
+                            ),
                           );
                           return;
                         }
 
                         Navigator.pop(ctx2);
-                        
+
                         // Show loading
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Opening chat...')),
@@ -253,7 +286,9 @@ void _showApplicantDetails(
                             MaterialPageRoute(
                               builder: (_) => ChatScreen(
                                 roomId: response.data!.id,
-                                otherUser: seeker is Map ? Map<String, dynamic>.from(seeker) : {},
+                                otherUser: seeker is Map
+                                    ? Map<String, dynamic>.from(seeker)
+                                    : {},
                               ),
                             ),
                           );
@@ -293,12 +328,13 @@ void _showApplicantDetails(
                                   return;
                                 }
                                 setState(() => loading = true);
-                                final response = await ApiService.updateApplicationStatus(
-                                  applicationId: appId,
-                                  status: 'rejected',
-                                );
+                                final response =
+                                    await ApiService.updateApplicationStatus(
+                                      applicationId: appId,
+                                      status: 'rejected',
+                                    );
                                 setState(() => loading = false);
-                                
+
                                 if (response.success) {
                                   Navigator.pop(ctx2);
                                   ScaffoldMessenger.of(ctx2).showSnackBar(
@@ -345,12 +381,13 @@ void _showApplicantDetails(
                                   return;
                                 }
                                 setState(() => loading = true);
-                                final response = await ApiService.updateApplicationStatus(
-                                  applicationId: appId,
-                                  status: 'accepted',
-                                );
+                                final response =
+                                    await ApiService.updateApplicationStatus(
+                                      applicationId: appId,
+                                      status: 'accepted',
+                                    );
                                 setState(() => loading = false);
-                                
+
                                 if (response.success) {
                                   Navigator.pop(ctx2);
                                   ScaffoldMessenger.of(ctx2).showSnackBar(
@@ -429,7 +466,10 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
   }
 
   if (img == null || img.isEmpty) {
-    return CircleAvatar(radius: radius, child: const Icon(Icons.person, size: 18));
+    return CircleAvatar(
+      radius: radius,
+      child: const Icon(Icons.person, size: 18),
+    );
   }
 
   String url = img;
@@ -496,7 +536,10 @@ class _HomeRecruiterPageState extends State<HomeRecruiterPage>
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+            unselectedLabelStyle: TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 14,
+            ),
             tabs: const [
               Tab(text: 'Home'),
               Tab(text: 'Posted Jobs'),
@@ -515,7 +558,10 @@ class _HomeRecruiterPageState extends State<HomeRecruiterPage>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color.fromARGB(255, 67, 163, 208), Color(0xFFE1F5FE)],
+                  colors: [
+                    Color.fromARGB(255, 67, 163, 208),
+                    Color(0xFFE1F5FE),
+                  ],
                 ),
               ),
             ),
@@ -557,7 +603,11 @@ class _HomeRecruiterPageState extends State<HomeRecruiterPage>
             // Content
             TabBarView(
               controller: _tabController,
-              children: const [RecruiterHomeTab(), PostedJobsTab(), ProfileTab()],
+              children: const [
+                RecruiterHomeTab(),
+                PostedJobsTab(),
+                ProfileTab(),
+              ],
             ),
           ],
         ),
@@ -597,10 +647,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
     final response = await ApiService.fetchApplicants();
     if (!response.success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
       return null;
     }
@@ -717,17 +764,17 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                 child: Text(
                   'Job Applicants',
                   style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      offset: const Offset(1, 1),
-                      blurRadius: 3,
-                      color: Colors.black.withAlpha(77),
-                    ),
-                  ],
-                ),
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 3,
+                        color: Colors.black.withAlpha(77),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -849,10 +896,25 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: status.toLowerCase() == 'pending'
-                                            ? const Color.fromARGB(255, 172, 106, 1)
+                                            ? const Color.fromARGB(
+                                                255,
+                                                172,
+                                                106,
+                                                1,
+                                              )
                                             : status.toLowerCase() == 'rejected'
-                                            ? const Color.fromARGB(255, 219, 44, 70)
-                                            : const Color.fromARGB(255, 64, 184, 74),
+                                            ? const Color.fromARGB(
+                                                255,
+                                                219,
+                                                44,
+                                                70,
+                                              )
+                                            : const Color.fromARGB(
+                                                255,
+                                                64,
+                                                184,
+                                                74,
+                                              ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -912,10 +974,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
     final response = await ApiService.fetchPostedJobs();
     if (!response.success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
       return null;
     }
@@ -970,7 +1029,10 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                   vertical: 8,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10.0,
+                    vertical: 4.0,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -992,7 +1054,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                       ),
                       IconButton(
                         tooltip: 'Refresh',
-                        icon: const Icon(Icons.refresh, color: Colors.white,),
+                        icon: const Icon(Icons.refresh, color: Colors.white),
                         onPressed: _refresh,
                       ),
                     ],
@@ -1019,39 +1081,44 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
                       color: const Color.fromARGB(255, 213, 240, 255),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
                         onTap: () => _showApplicantsDialog(context, id, title),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               // avatar
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withAlpha(15),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.work,
-                                      size: 28,
-                                      color: Colors.blueAccent,
+                              Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(15),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
                                     ),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.work,
+                                    size: 28,
+                                    color: Colors.blueAccent,
                                   ),
                                 ),
-                                const SizedBox(width: 18),
+                              ),
+                              const SizedBox(width: 18),
 
                               // main content: title, location, hours, payment each on its own line
                               Expanded(
@@ -1060,26 +1127,39 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                                   children: [
                                     Text(
                                       " $title",
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 8),
 
                                     // location line
-                                    if ((job['location'] ?? job['locations']) != null) ...[
+                                    if ((job['location'] ?? job['locations']) !=
+                                        null) ...[
                                       Row(
                                         children: [
-                                          Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                                          Icon(
+                                            Icons.location_on,
+                                            size: 14,
+                                            color: Colors.grey[600],
+                                          ),
                                           const SizedBox(width: 6),
                                           Expanded(
                                             child: Text(
                                               (job['location'] is String)
                                                   ? job['location']
                                                   : (job['locations'] is List)
-                                                      ? (job['locations'] as List).join(', ')
-                                                      : job['location']?.toString() ?? '',
-                                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                                  ? (job['locations'] as List)
+                                                        .join(', ')
+                                                  : job['location']
+                                                            ?.toString() ??
+                                                        '',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.black87,
+                                              ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -1092,12 +1172,18 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                                     // hours line
                                     Row(
                                       children: [
-                                        Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                                        Icon(
+                                          Icons.schedule,
+                                          size: 14,
+                                          color: Colors.grey[600],
+                                        ),
                                         const SizedBox(width: 6),
                                         Flexible(
                                           child: Text(
                                             '$workingHours hrs/day',
-                                            style: const TextStyle(fontSize: 13),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
@@ -1108,12 +1194,19 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                                     // payment line
                                     Row(
                                       children: [
-                                        Icon(Icons.payments, size: 14, color: Colors.green[700]),
+                                        Icon(
+                                          Icons.payments,
+                                          size: 14,
+                                          color: Colors.green[700],
+                                        ),
                                         const SizedBox(width: 6),
                                         Flexible(
                                           child: Text(
                                             '$payment per hour',
-                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
@@ -1129,11 +1222,22 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Chip(
-                                    label: Text('$appsCount', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    label: Text(
+                                      '$appsCount',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                     backgroundColor: Colors.blue[50],
                                   ),
                                   const SizedBox(height: 6),
-                                  Text('applicants', style: TextStyle(fontSize: 11, color: Colors.grey[700])),
+                                  Text(
+                                    'applicants',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -1160,115 +1264,112 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
   ) async {
     final scaffold = ScaffoldMessenger.of(context);
     final response = await ApiService.fetchApplicants();
-    
+
     if (!response.success) {
       scaffold.showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
       return;
     }
-    
+
     final all = response.data ?? [];
     final filtered = all.where((a) {
-        // Job may come under key 'job' or 'job_id'
-        final j = a['job'];
-        if (j is Map && j['id'] != null) return j['id'] == jobId;
-        if (a['job_id'] != null) return a['job_id'] == jobId;
-        return false;
-      }).toList();
+      // Job may come under key 'job' or 'job_id'
+      final j = a['job'];
+      if (j is Map && j['id'] != null) return j['id'] == jobId;
+      if (a['job_id'] != null) return a['job_id'] == jobId;
+      return false;
+    }).toList();
 
-      showDialog(
-        context: context,
-        builder: (ctx) {
-          return AlertDialog(
-            backgroundColor: const Color.fromARGB(255, 213, 240, 255),
-            title: Text('Applicants - $jobTitle'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: filtered.isEmpty
-                  ? const Text('No applicants yet')
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        final a = filtered[index];
-                        final seeker = a['seeker'] ?? a['user'] ?? {};
-                        final name = seeker is Map
-                            ? (seeker['name'] ?? seeker['email'] ?? 'Seeker')
-                            : 'Seeker';
-                        final appliedAt =
-                            a['applied_at'] ?? a['created_at'] ?? '';
-                        final dateStr = _formatDate(appliedAt);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 213, 240, 255),
+          title: Text('Applicants - $jobTitle'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: filtered.isEmpty
+                ? const Text('No applicants yet')
+                : ListView.separated(
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      final a = filtered[index];
+                      final seeker = a['seeker'] ?? a['user'] ?? {};
+                      final name = seeker is Map
+                          ? (seeker['name'] ?? seeker['email'] ?? 'Seeker')
+                          : 'Seeker';
+                      final appliedAt =
+                          a['applied_at'] ?? a['created_at'] ?? '';
+                      final dateStr = _formatDate(appliedAt);
 
-                        return Card(
-                          elevation: 3,
-                          color: const Color.fromARGB(255, 213, 240, 255),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              _showApplicantDetails(
-                                context,
-                                a,
-                                onUpdated: () => _refresh(),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              child: Row(
-                                children: [
-                                  _buildProfileAvatar(seeker),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
+                      return Card(
+                        elevation: 3,
+                        color: const Color.fromARGB(255, 213, 240, 255),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _showApplicantDetails(
+                              context,
+                              a,
+                              onUpdated: () => _refresh(),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              children: [
+                                _buildProfileAvatar(seeker),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        name.toString(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      if (dateStr.isNotEmpty)
                                         Text(
-                                          name.toString(),
+                                          dateStr,
                                           style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                            color: Colors.grey,
                                           ),
                                         ),
-                                        const SizedBox(height: 6),
-                                        if (dateStr.isNotEmpty)
-                                          Text(
-                                            dateStr,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemCount: filtered.length,
-                    ),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemCount: filtered.length,
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        },
-      );
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -1320,7 +1421,7 @@ class _ProfileTabState extends State<ProfileTab> {
     });
 
     final scaffold = ScaffoldMessenger.of(context);
-    
+
     dynamic response;
     if (field == 'bio') {
       response = await ApiService.updateBio(
@@ -1335,19 +1436,14 @@ class _ProfileTabState extends State<ProfileTab> {
     }
 
     if (response.success) {
-      scaffold.showSnackBar(
-        SnackBar(content: Text(response.message)),
-      );
+      scaffold.showSnackBar(SnackBar(content: Text(response.message)));
       await _refreshUser();
     } else {
       scaffold.showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
     }
-    
+
     setState(() {
       if (field == 'bio') _loadingBio = false;
       if (field == 'location') _loadingLocation = false;
@@ -1392,14 +1488,17 @@ class _ProfileTabState extends State<ProfileTab> {
                                 ? null
                                 : () async {
                                     setState(() => loading = true);
-                                    final response = await ApiService.updateProfilePic(
-                                      profilePic: name,
-                                    );
+                                    final response =
+                                        await ApiService.updateProfilePic(
+                                          profilePic: name,
+                                        );
                                     setState(() => loading = false);
-                                    
+
                                     if (response.success) {
                                       scaffold.showSnackBar(
-                                        SnackBar(content: Text(response.message)),
+                                        SnackBar(
+                                          content: Text(response.message),
+                                        ),
                                       );
                                       Navigator.pop(ctx2);
                                       await _refreshUser();
@@ -1554,7 +1653,9 @@ class _ProfileTabState extends State<ProfileTab> {
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 10,
                                         ),
-                                        side: const BorderSide(color: Colors.blue),
+                                        side: const BorderSide(
+                                          color: Colors.blue,
+                                        ),
                                         foregroundColor: Colors.blue,
                                       ),
                                       onPressed: () => _showProfileActions(),
@@ -1621,7 +1722,10 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Bio', style: TextStyle(color: Colors.white)),
+                                  : const Text(
+                                      'Update Bio',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                             ),
                           ],
                         ),
@@ -1679,7 +1783,10 @@ class _ProfileTabState extends State<ProfileTab> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Update Location', style: TextStyle(color: Colors.white)),
+                                  : const Text(
+                                      'Update Location',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                             ),
                           ],
                         ),
@@ -1707,7 +1814,10 @@ Drawer _buildDrawer(BuildContext context) {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color.fromARGB(255, 67, 163, 208), Color.fromARGB(255, 0, 101, 147)],
+              colors: [
+                Color.fromARGB(255, 67, 163, 208),
+                Color.fromARGB(255, 0, 101, 147),
+              ],
             ),
           ),
           child: FutureBuilder<ApiResponse<Map<String, dynamic>>>(
@@ -1725,20 +1835,32 @@ Drawer _buildDrawer(BuildContext context) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user == null ? 'Recruiter' : (user['name']?.toString() ?? 'Recruiter'),
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          user == null
+                              ? 'Recruiter'
+                              : (user['name']?.toString() ?? 'Recruiter'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           user == null ? '' : (user['email']?.toString() ?? ''),
-                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
-                        const Text('Quick actions', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        const Text(
+                          'Quick actions',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
                       ],
                     ),
                   ),
@@ -1750,18 +1872,26 @@ Drawer _buildDrawer(BuildContext context) {
 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Text('Messages', style: Theme.of(context).textTheme.titleSmall),
+          child: Text(
+            'Messages',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
         ),
 
         ListTile(
           visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: const Icon(Icons.inbox, color: Colors.blue),
           title: const Text('Inbox'),
           subtitle: const Text('View your messages'),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChatRoomsScreen()));
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ChatRoomsScreen()));
           },
           trailing: const Icon(Icons.chevron_right),
         ),
@@ -1775,39 +1905,60 @@ Drawer _buildDrawer(BuildContext context) {
 
         ListTile(
           visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: const Icon(Icons.how_to_vote, color: Colors.indigo),
           title: const Text('Eligible'),
           subtitle: const Text('People you can rate'),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 0)));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const RatingsScreen(initialTab: 0),
+              ),
+            );
           },
           trailing: const Icon(Icons.chevron_right),
         ),
 
         ListTile(
           visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: const Icon(Icons.rate_review, color: Colors.green),
           title: const Text('My Ratings'),
           subtitle: const Text('Ratings you created'),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 1)));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const RatingsScreen(initialTab: 1),
+              ),
+            );
           },
           trailing: const Icon(Icons.chevron_right),
         ),
 
         ListTile(
           visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: const Icon(Icons.reviews, color: Colors.orange),
           title: const Text('About Me'),
           subtitle: const Text('Ratings written about you'),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RatingsScreen(initialTab: 2)));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const RatingsScreen(initialTab: 2),
+              ),
+            );
           },
           trailing: const Icon(Icons.chevron_right),
         ),
@@ -1816,7 +1967,10 @@ Drawer _buildDrawer(BuildContext context) {
 
         ListTile(
           visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text('Logout', style: TextStyle(color: Colors.red)),
           subtitle: const Text('Sign out from the app'),
@@ -1825,7 +1979,7 @@ Drawer _buildDrawer(BuildContext context) {
 
             await ApiService.logout();
             await clearToken();
-            
+
             if (context.mounted) {
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const SignInPage()),
@@ -1838,7 +1992,10 @@ Drawer _buildDrawer(BuildContext context) {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text('App version: 1.0.0', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          child: Text(
+            'App version: 1.0.0',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
         ),
         const SizedBox(height: 12),
       ],
@@ -1906,11 +2063,15 @@ void _showAddJobDialog(BuildContext context) {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'easy', child: Text('Easy')),
-                        DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                        DropdownMenuItem(
+                          value: 'medium',
+                          child: Text('Medium'),
+                        ),
                         DropdownMenuItem(value: 'hard', child: Text('Hard')),
                       ],
                       onChanged: (val) {
-                        if (val != null) setState(() => selectedDifficulty = val);
+                        if (val != null)
+                          setState(() => selectedDifficulty = val);
                       },
                     ),
                     const SizedBox(height: 12),
@@ -1962,7 +2123,7 @@ void _showAddJobDialog(BuildContext context) {
                                 ? null
                                 : () async {
                                     setState(() => isLoading = true);
-                                      
+
                                     final title = titleCtrl.text.trim();
                                     final desc = descCtrl.text.trim();
                                     final hours =
@@ -1974,22 +2135,22 @@ void _showAddJobDialog(BuildContext context) {
                                         ) ??
                                         0;
 
-                                      if (title.isEmpty ||
-                                          desc.isEmpty ||
-                                          hours <= 0 ||
-                                          payment <= 0) {
-                                        setState(() => isLoading = false);
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Please fill all fields correctly',
-                                            ),
+                                    if (title.isEmpty ||
+                                        desc.isEmpty ||
+                                        hours <= 0 ||
+                                        payment <= 0) {
+                                      setState(() => isLoading = false);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Please fill all fields correctly',
                                           ),
-                                        );
-                                        return;
-                                      }
+                                        ),
+                                      );
+                                      return;
+                                    }
 
                                     final response = await ApiService.createJob(
                                       title: title,
@@ -2001,7 +2162,7 @@ void _showAddJobDialog(BuildContext context) {
                                           ? null
                                           : locationCtrl.text.trim(),
                                     );
-                                    
+
                                     setState(() => isLoading = false);
 
                                     if (response.success) {
@@ -2009,7 +2170,9 @@ void _showAddJobDialog(BuildContext context) {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        SnackBar(content: Text(response.message)),
+                                        SnackBar(
+                                          content: Text(response.message),
+                                        ),
                                       );
                                     } else {
                                       ScaffoldMessenger.of(
@@ -2045,4 +2208,3 @@ void _showAddJobDialog(BuildContext context) {
     },
   );
 }
-

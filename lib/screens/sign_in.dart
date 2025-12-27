@@ -41,7 +41,7 @@ class _SignInPageState extends State<SignInPage> {
     );
 
     if (!mounted) return;
-    
+
     setState(() => _loading = false);
 
     if (response.success) {
@@ -60,10 +60,7 @@ class _SignInPageState extends State<SignInPage> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(response.message), backgroundColor: Colors.red),
       );
     }
   }
@@ -221,7 +218,10 @@ class _SignInPageState extends State<SignInPage> {
                                 },
                                 child: const Text(
                                   'Create An Account',
-                                  style: TextStyle(fontSize: 12, color: Colors.blue),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blue,
+                                  ),
                                 ),
                               ),
                               TextButton(
@@ -235,7 +235,10 @@ class _SignInPageState extends State<SignInPage> {
                                 },
                                 child: const Text(
                                   'Forget Password?',
-                                  style: TextStyle(fontSize: 12, color: Colors.blue),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blue,
+                                  ),
                                 ),
                               ),
                             ],
@@ -281,4 +284,3 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 }
-

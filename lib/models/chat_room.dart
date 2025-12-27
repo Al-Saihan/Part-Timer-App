@@ -18,13 +18,18 @@ class ChatRoom {
 
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
     // ? Parse other participant from various API formats
-    final otherParticipant = json['other_participant'] ?? json['other_user'] ?? json['otherUser'] ?? {};
-    
+    final otherParticipant =
+        json['other_participant'] ??
+        json['other_user'] ??
+        json['otherUser'] ??
+        {};
+
     // ? Extract latest message content and timestamp
-    final latestMsg = json['latest_message'] ?? json['last_message'] ?? json['lastMessage'];
+    final latestMsg =
+        json['latest_message'] ?? json['last_message'] ?? json['lastMessage'];
     String? lastMsgContent;
     DateTime? lastMsgTime;
-    
+
     if (latestMsg != null && latestMsg is Map) {
       lastMsgContent = latestMsg['content']?.toString();
       lastMsgTime = latestMsg['created_at'] != null
@@ -34,12 +39,16 @@ class ChatRoom {
 
     return ChatRoom(
       id: json['id'] ?? json['room_id'] ?? 0,
-      otherUser: otherParticipant is Map ? Map<String, dynamic>.from(otherParticipant) : {},
+      otherUser: otherParticipant is Map
+          ? Map<String, dynamic>.from(otherParticipant)
+          : {},
       lastMessage: lastMsgContent,
       lastMessageAt: lastMsgTime,
       unreadCount: json['unread_count'] ?? json['unreadCount'] ?? 0,
       createdAt: DateTime.parse(
-        json['created_at']?.toString() ?? json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
+        json['created_at']?.toString() ??
+            json['createdAt']?.toString() ??
+            DateTime.now().toIso8601String(),
       ),
     );
   }
@@ -65,25 +74,37 @@ class ChatMessage {
     this.isMe = false,
   });
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json, {int? currentUserId}) {
+  factory ChatMessage.fromJson(
+    Map<String, dynamic> json, {
+    int? currentUserId,
+  }) {
     // ? Safely convert field types to int
     final id = json['id'];
     final messageId = id is int ? id : int.tryParse(id?.toString() ?? '0') ?? 0;
-    
+
     final roomIdRaw = json['room_id'] ?? json['roomId'];
-    final roomId = roomIdRaw is int ? roomIdRaw : int.tryParse(roomIdRaw?.toString() ?? '0') ?? 0;
-    
+    final roomId = roomIdRaw is int
+        ? roomIdRaw
+        : int.tryParse(roomIdRaw?.toString() ?? '0') ?? 0;
+
     final senderIdRaw = json['sender_id'] ?? json['senderId'];
-    final senderId = senderIdRaw is int ? senderIdRaw : int.tryParse(senderIdRaw?.toString() ?? '0') ?? 0;
-    
+    final senderId = senderIdRaw is int
+        ? senderIdRaw
+        : int.tryParse(senderIdRaw?.toString() ?? '0') ?? 0;
+
     return ChatMessage(
       id: messageId,
       roomId: roomId,
       senderId: senderId,
       content: json['content']?.toString() ?? '',
-      messageType: json['message_type']?.toString() ?? json['messageType']?.toString() ?? 'text',
+      messageType:
+          json['message_type']?.toString() ??
+          json['messageType']?.toString() ??
+          'text',
       createdAt: DateTime.parse(
-        json['created_at']?.toString() ?? json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
+        json['created_at']?.toString() ??
+            json['createdAt']?.toString() ??
+            DateTime.now().toIso8601String(),
       ),
       isMe: currentUserId != null && senderId == currentUserId,
     );
