@@ -78,7 +78,8 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color.fromARGB(255, 31, 143, 189),
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: Navigator.canPop(context) ? const BackButton() : null,
       ),
@@ -168,32 +169,27 @@ class _SignUpPageState extends State<SignUpPage> {
                                   decoration: BoxDecoration(
                                     color: _role == 'seeker'
                                         ? Colors.blue
-                                        : const Color.fromARGB(
-                                            255,
-                                            191,
-                                            191,
-                                            191,
-                                          ),
+                                        : const Color.fromARGB(255, 84, 84, 84),
                                     border: Border.all(
                                       color: _role == 'seeker'
                                           ? Colors.blue
                                           : Colors.transparent,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Column(
                                     children: const [
                                       Icon(
                                         Icons.search,
-                                        color: Color.fromARGB(255, 73, 73, 73),
+                                        color: Color.fromARGB(255, 255, 255, 255),
                                         size: 30,
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        'I am looking for jobs',
+                                        'I am looking for jobs\n[Seeker]',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          color: Color.fromARGB(255, 0, 0, 0),
+                                          color: Color.fromARGB(255, 255, 255, 255),
                                         ),
                                       ),
                                     ],
@@ -213,32 +209,27 @@ class _SignUpPageState extends State<SignUpPage> {
                                   decoration: BoxDecoration(
                                     color: _role == 'recruiter'
                                         ? Colors.blue
-                                        : const Color.fromARGB(
-                                            255,
-                                            191,
-                                            191,
-                                            191,
-                                          ),
+                                        : const Color.fromARGB(255, 84, 84, 84),
                                     border: Border.all(
                                       color: _role == 'recruiter'
                                           ? Colors.blue
                                           : const Color.fromARGB(0, 0, 0, 0),
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Column(
                                     children: const [
                                       Icon(
                                         Icons.work,
-                                        color: Color.fromARGB(255, 73, 73, 73),
+                                        color: Color.fromARGB(255, 255, 255, 255),
                                         size: 30,
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        'I am looking to hire',
+                                        'I am looking to hire\n[Recruiter]',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          color: Color.fromARGB(255, 0, 0, 0),
+                                          color: Color.fromARGB(255, 255, 255, 255),
                                         ),
                                       ),
                                     ],
@@ -374,3 +365,4 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
+
