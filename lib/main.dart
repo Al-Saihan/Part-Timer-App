@@ -38,6 +38,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Part Timer',
       theme: ThemeData(primarySwatch: Colors.blue),
+      debugShowCheckedModeBanner: false,
       home: home,
     );
   }
