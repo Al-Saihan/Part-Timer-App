@@ -130,7 +130,7 @@ class _SignInPageState extends State<SignInPage> {
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: Card(
                   elevation: 8,
-                  color: Colors.white.withAlpha(243),
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -226,7 +226,7 @@ class _SignInPageState extends State<SignInPage> {
                                 },
                                 child: const Text(
                                   'Create An Account',
-                                  style: TextStyle(fontSize: 12),
+                                  style: TextStyle(fontSize: 12, color: Colors.blue),
                                 ),
                               ),
                               TextButton(
@@ -240,7 +240,7 @@ class _SignInPageState extends State<SignInPage> {
                                 },
                                 child: const Text(
                                   'Forget Password?',
-                                  style: TextStyle(fontSize: 12),
+                                  style: TextStyle(fontSize: 12, color: Colors.blue),
                                 ),
                               ),
                             ],
@@ -286,3 +286,4 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 }
+
