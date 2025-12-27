@@ -5,6 +5,7 @@ import '../models/job.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
 import 'ratings_screen.dart';
+import 'chat_rooms_screen.dart';
 
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
@@ -1242,6 +1243,26 @@ Drawer _buildDrawer(BuildContext context) {
             },
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text('Messages', style: Theme.of(context).textTheme.titleSmall),
+        ),
+
+        ListTile(
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.inbox, color: Colors.blue),
+          title: const Text('Inbox'),
+          subtitle: const Text('View your messages'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChatRoomsScreen()));
+          },
+          trailing: const Icon(Icons.chevron_right),
+        ),
+
+        const Divider(),
+
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Text('Ratings', style: Theme.of(context).textTheme.titleSmall),

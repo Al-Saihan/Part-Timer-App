@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/job.dart';
+import '../models/chat_room.dart';
 import '../includes/auth.dart';
 import 'api_response.dart';
 
@@ -1062,6 +1063,256 @@ class ApiService {
       return ApiResponse(
         success: false,
         message: 'Failed to update profile picture. Please try again.',
+      );
+    }
+  }
+
+  // ! MARK: Chat API Methods
+
+  /// Get all chat rooms for authenticated user
+  static Future<ApiResponse<List<ChatRoom>>> fetchChatRooms() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return ApiResponse(
+          success: false,
+          message: 'Not authenticated',
+        );
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/chat/rooms'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      debugPrint('fetchChatRooms status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final parsed = jsonDecode(response.body);
+        final rooms = (parsed['chat_rooms'] ?? parsed['data'] ?? parsed['rooms'] ?? []) as List;
+        return ApiResponse(
+          success: true,
+          data: rooms.map((r) => ChatRoom.fromJson(r)).toList(),
+          message: 'Chat rooms loaded',
+        );
+      } else {
+        return _handleError(response);
+      }
+    } catch (e) {
+      debugPrint('fetchChatRooms error: $e');
+      return ApiResponse(
+        success: false,
+        message: 'Failed to load chat rooms',
+      );
+    }
+  }
+
+  /// Create or get existing chat room with another user
+  static Future<ApiResponse<ChatRoom>> createOrGetChatRoom({
+    required int otherUserId,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return ApiResponse(
+          success: false,
+          message: 'Not authenticated',
+        );
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/rooms'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'other_user_id': otherUserId}),
+      );
+
+      debugPrint('createOrGetChatRoom status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final parsed = jsonDecode(response.body);
+        final roomData = parsed['chat_room'] ?? parsed['data'] ?? parsed['room'] ?? parsed;
+        return ApiResponse(
+          success: true,
+          data: ChatRoom.fromJson(roomData),
+          message: parsed['message'] ?? 'Chat room ready',
+        );
+      } else {
+        return _handleError(response);
+      }
+    } catch (e) {
+      debugPrint('createOrGetChatRoom error: $e');
+      return ApiResponse(
+        success: false,
+        message: 'Failed to create chat room',
+      );
+    }
+  }
+
+  /// Get messages for a chat room
+  static Future<ApiResponse<List<ChatMessage>>> fetchChatMessages({
+    required int roomId,
+    int perPage = 50,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return ApiResponse(
+          success: false,
+          message: 'Not authenticated',
+        );
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/chat/rooms/$roomId/messages?per_page=$perPage'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      debugPrint('fetchChatMessages status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final parsed = jsonDecode(response.body);
+        final messages = (parsed['messages'] ?? parsed['data'] ?? []) as List;
+        
+        // Get current user ID for isMe property
+        final currentUserResponse = await fetchCurrentUser();
+        final currentUserId = currentUserResponse.data?['id'];
+
+        return ApiResponse(
+          success: true,
+          data: messages
+              .map((m) => ChatMessage.fromJson(m, currentUserId: currentUserId))
+              .toList(),
+          message: 'Messages loaded',
+        );
+      } else {
+        return _handleError(response);
+      }
+    } catch (e) {
+      debugPrint('fetchChatMessages error: $e');
+      return ApiResponse(
+        success: false,
+        message: 'Failed to load messages',
+      );
+    }
+  }
+
+  /// Send a message to a chat room
+  static Future<ApiResponse<ChatMessage>> sendChatMessage({
+    required int roomId,
+    required String content,
+    String messageType = 'text',
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return ApiResponse(
+          success: false,
+          message: 'Not authenticated',
+        );
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/rooms/$roomId/messages'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'content': content,
+          'message_type': messageType,
+        }),
+      );
+
+      debugPrint('sendChatMessage status: ${response.statusCode}');
+      debugPrint('sendChatMessage response: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final parsed = jsonDecode(response.body);
+        debugPrint('sendChatMessage parsed: $parsed');
+        
+        // Check if response has success field and it's true
+        final isSuccess = parsed['success'] == true || response.statusCode == 201;
+        
+        if (!isSuccess) {
+          return ApiResponse(
+            success: false,
+            message: parsed['message'] ?? 'Failed to send message',
+          );
+        }
+        
+        final messageData = parsed['message'] ?? parsed['data'] ?? parsed;
+        debugPrint('sendChatMessage messageData: $messageData');
+        
+        final currentUserResponse = await fetchCurrentUser();
+        final currentUserId = currentUserResponse.data?['id'];
+
+        return ApiResponse(
+          success: true,
+          data: ChatMessage.fromJson(messageData, currentUserId: currentUserId),
+          message: 'Message sent',
+        );
+      } else {
+        debugPrint('sendChatMessage error response: ${response.body}');
+        return _handleError(response);
+      }
+    } catch (e, stackTrace) {
+      debugPrint('sendChatMessage error: $e');
+      debugPrint('sendChatMessage stackTrace: $stackTrace');
+      return ApiResponse(
+        success: false,
+        message: 'Failed to send message',
+      );
+    }
+  }
+
+  /// Delete a message (only sender can delete)
+  static Future<ApiResponse<void>> deleteChatMessage({
+    required int roomId,
+    required int messageId,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return ApiResponse(
+          success: false,
+          message: 'Not authenticated',
+        );
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/chat/rooms/$roomId/messages/$messageId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      debugPrint('deleteChatMessage status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return ApiResponse(
+          success: true,
+          message: 'Message deleted',
+        );
+      } else {
+        return _handleError(response);
+      }
+    } catch (e) {
+      debugPrint('deleteChatMessage error: $e');
+      return ApiResponse(
+        success: false,
+        message: 'Failed to delete message',
       );
     }
   }

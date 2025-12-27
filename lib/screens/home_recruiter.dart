@@ -5,6 +5,8 @@ import '../services/api_response.dart';
 import '../includes/auth.dart';
 import 'sign_in.dart';
 import 'ratings_screen.dart';
+import 'chat_rooms_screen.dart';
+import 'chat_screen.dart';
 
 String _formatDate(dynamic raw) {
   if (raw == null) return '';
@@ -224,9 +226,45 @@ void _showApplicantDetails(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () => ScaffoldMessenger.of(ctx2).showSnackBar(
-                        const SnackBar(content: Text('Contact pressed')),
-                      ),
+                      onPressed: () async {
+                        final seekerId = seeker is Map ? (seeker['id'] ?? seeker['user_id']) : null;
+                        if (seekerId == null) {
+                          ScaffoldMessenger.of(ctx2).showSnackBar(
+                            const SnackBar(content: Text('Unable to start chat')),
+                          );
+                          return;
+                        }
+
+                        Navigator.pop(ctx2);
+                        
+                        // Show loading
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Opening chat...')),
+                        );
+
+                        // Create or get chat room
+                        final response = await ApiService.createOrGetChatRoom(
+                          otherUserId: seekerId,
+                        );
+
+                        if (response.success && response.data != null) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ChatScreen(
+                                roomId: response.data!.id,
+                                otherUser: seeker is Map ? Map<String, dynamic>.from(seeker) : {},
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(response.message),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
                       child: const Text('Contact'),
                     ),
                     const SizedBox(width: 8),
@@ -1708,6 +1746,26 @@ Drawer _buildDrawer(BuildContext context) {
             },
           ),
         ),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text('Messages', style: Theme.of(context).textTheme.titleSmall),
+        ),
+
+        ListTile(
+          visualDensity: VisualDensity.compact,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: const Icon(Icons.inbox, color: Colors.blue),
+          title: const Text('Inbox'),
+          subtitle: const Text('View your messages'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChatRoomsScreen()));
+          },
+          trailing: const Icon(Icons.chevron_right),
+        ),
+
+        const Divider(),
 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
