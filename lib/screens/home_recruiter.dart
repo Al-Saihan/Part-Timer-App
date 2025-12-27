@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/api_response.dart';
@@ -95,6 +96,7 @@ void _showApplicantDetails(
       return StatefulBuilder(
         builder: (ctx2, setState) {
           return AlertDialog(
+            backgroundColor: Colors.white.withAlpha(243),
             contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -359,7 +361,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
       final assetPath = 'assets/avatars/$profilePic.png';
       return CircleAvatar(
         radius: radius,
-        backgroundColor: Colors.grey[200],
+        backgroundColor: const Color.fromARGB(255, 213, 240, 255),
         child: ClipOval(
           child: Image.asset(
             assetPath,
@@ -434,7 +436,13 @@ class _HomeRecruiterPageState extends State<HomeRecruiterPage>
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        extendBodyBehindAppBar: false,
         appBar: AppBar(
+          backgroundColor: const Color.fromARGB(255, 31, 143, 189),
+          foregroundColor: Colors.white,
+          toolbarHeight: 50,
+          elevation: 4,
+          shadowColor: const Color.fromARGB(255, 31, 143, 189).withAlpha(150),
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
@@ -445,6 +453,11 @@ class _HomeRecruiterPageState extends State<HomeRecruiterPage>
           centerTitle: true,
           bottom: TabBar(
             controller: _tabController,
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
             tabs: const [
               Tab(text: 'Home'),
               Tab(text: 'Posted Jobs'),
@@ -455,14 +468,65 @@ class _HomeRecruiterPageState extends State<HomeRecruiterPage>
 
         drawer: _buildDrawer(context),
 
-        body: TabBarView(
-          controller: _tabController,
-          children: const [RecruiterHomeTab(), PostedJobsTab(), ProfileTab()],
+        body: Stack(
+          children: [
+            // ? MARK: Background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color.fromARGB(255, 67, 163, 208), Color(0xFFE1F5FE)],
+                ),
+              ),
+            ),
+
+            // ? Soft decorative circle 1
+            Positioned(
+              top: -80,
+              left: -60,
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue.withAlpha(46),
+                  ),
+                ),
+              ),
+            ),
+
+            // ? Soft decorative circle 2
+            Positioned(
+              bottom: -40,
+              right: -50,
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(
+                  width: 400,
+                  height: 400,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color.fromARGB(255, 46, 17, 189).withAlpha(64),
+                  ),
+                ),
+              ),
+            ),
+
+            // Content
+            TabBarView(
+              controller: _tabController,
+              children: const [RecruiterHomeTab(), PostedJobsTab(), ProfileTab()],
+            ),
+          ],
         ),
 
         // FAB only visible on "Posted Jobs" tab (index 1)
         floatingActionButton: _currentTabIndex == 1
             ? FloatingActionButton(
+                backgroundColor: Colors.blue,
                 onPressed: () => _showAddJobDialog(context),
                 tooltip: 'Add Job',
                 child: const Icon(Icons.add),
@@ -546,6 +610,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                         flex: 3,
                         child: Card(
                           elevation: 4,
+                          color: Colors.white.withAlpha(243),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -587,6 +652,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
                         flex: 1,
                         child: Card(
                           elevation: 4,
+                          color: Colors.white.withAlpha(243),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -678,6 +744,7 @@ class _RecruiterHomeTabState extends State<RecruiterHomeTab> {
 
                       return Card(
                         elevation: 4,
+                        color: Colors.white.withAlpha(243),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -886,6 +953,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
+                      color: Colors.white.withAlpha(243),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
@@ -1055,6 +1123,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
         context: context,
         builder: (ctx) {
           return AlertDialog(
+            backgroundColor: Colors.white.withAlpha(243),
             title: Text('Applicants - $jobTitle'),
             content: SizedBox(
               width: double.maxFinite,
@@ -1074,6 +1143,7 @@ class _PostedJobsTabState extends State<PostedJobsTab> {
 
                         return Card(
                           elevation: 3,
+                          color: Colors.white.withAlpha(243),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -1237,6 +1307,7 @@ class _ProfileTabState extends State<ProfileTab> {
         return StatefulBuilder(
           builder: (ctx2, setState) {
             return AlertDialog(
+              backgroundColor: Colors.white.withAlpha(243),
               title: const Text('Choose Avatar'),
               content: SizedBox(
                 width: double.maxFinite,
@@ -1355,6 +1426,7 @@ class _ProfileTabState extends State<ProfileTab> {
               children: [
                 Card(
                   elevation: 4,
+                  color: Colors.white.withAlpha(243),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1397,6 +1469,7 @@ class _ProfileTabState extends State<ProfileTab> {
                             children: [
                               Card(
                                 elevation: 2,
+                                color: Colors.white.withAlpha(243),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1420,6 +1493,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 10,
                                         ),
+                                        side: const BorderSide(color: Colors.blue),
+                                        foregroundColor: Colors.blue,
                                       ),
                                       onPressed: () => _showProfileActions(),
                                       label: const Text('Edit'),
@@ -1440,6 +1515,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Bio
                 Card(
                   elevation: 2,
+                  color: Colors.white.withAlpha(243),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1469,6 +1545,9 @@ class _ProfileTabState extends State<ProfileTab> {
                           children: [
                             const Spacer(),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
                               onPressed: _loadingBio
                                   ? null
                                   : () => _updateField('bio'),
@@ -1495,6 +1574,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Locations
                 Card(
                   elevation: 2,
+                  color: Colors.white.withAlpha(243),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1523,6 +1603,9 @@ class _ProfileTabState extends State<ProfileTab> {
                           children: [
                             const Spacer(),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
                               onPressed: _loadingLocation
                                   ? null
                                   : () => _updateField('location'),
@@ -1559,7 +1642,13 @@ Drawer _buildDrawer(BuildContext context) {
       padding: EdgeInsets.zero,
       children: [
         DrawerHeader(
-          decoration: const BoxDecoration(color: Color.fromARGB(255, 111, 146, 175)),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color.fromARGB(255, 67, 163, 208), Color.fromARGB(255, 0, 101, 147)],
+            ),
+          ),
           child: FutureBuilder<ApiResponse<Map<String, dynamic>>>(
             future: ApiService.fetchCurrentUser(),
             builder: (ctx, snap) {
@@ -1692,6 +1781,7 @@ void _showAddJobDialog(BuildContext context) {
       return StatefulBuilder(
         builder: (context, setState) {
           return Dialog(
+            backgroundColor: Colors.white.withAlpha(243),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -1774,6 +1864,9 @@ void _showAddJobDialog(BuildContext context) {
                       children: [
                         Expanded(
                           child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.blue),
+                            ),
                             onPressed: () => Navigator.pop(context),
                             child: const Text('Cancel'),
                           ),
@@ -1781,6 +1874,9 @@ void _showAddJobDialog(BuildContext context) {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                            ),
                             onPressed: isLoading
                                 ? null
                                 : () async {

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
@@ -136,17 +137,71 @@ class _RatingsScreenState extends State<RatingsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 67, 163, 208),
+        foregroundColor: Colors.white,
         title: const Text('Ratings'),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: const [Tab(text: 'Eligible'), Tab(text: 'My Ratings'), Tab(text: 'About Me')],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Stack(
         children: [
+          // ? MARK: Background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color.fromARGB(255, 67, 163, 208), Color(0xFFE1F5FE)],
+              ),
+            ),
+          ),
+
+          // ? Soft decorative circle 1
+          Positioned(
+            top: -80,
+            left: -60,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+              child: Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blue.withAlpha(46),
+                ),
+              ),
+            ),
+          ),
+
+          // ? Soft decorative circle 2
+          Positioned(
+            bottom: -40,
+            right: -50,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+              child: Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color.fromARGB(255, 46, 17, 189).withAlpha(64),
+                ),
+              ),
+            ),
+          ),
+
+          // Content
+          TabBarView(
+            controller: _tabController,
+            children: [
           // Eligible
           RefreshIndicator(
             onRefresh: _refreshAll,
@@ -179,6 +234,7 @@ class _RatingsScreenState extends State<RatingsScreen>
 
                     return Card(
                       elevation: 2,
+                      color: Colors.white.withAlpha(243),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: _avatarFromMap(other, radius: 22),
@@ -189,6 +245,9 @@ class _RatingsScreenState extends State<RatingsScreen>
                         ]),
                         trailing: canRate
                             ? ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                ),
                                 onPressed: () => _showRateDialogForItem(item),
                                 child: Text(existing != null ? 'Edit' : 'Rate'),
                               )
@@ -228,6 +287,7 @@ class _RatingsScreenState extends State<RatingsScreen>
 
                     return Card(
                       elevation: 2,
+                      color: Colors.white.withAlpha(243),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: _avatarFromMap(rated, radius: 22),
@@ -274,8 +334,7 @@ class _RatingsScreenState extends State<RatingsScreen>
                     final review = r['review'] ?? r['comment'] ?? '';
 
                     return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 2,                      color: Colors.white.withAlpha(243),                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
                         leading: _avatarFromMap(rater, radius: 22),
                         title: Text(rater is Map ? (rater['name'] ?? 'User') : 'User'),
@@ -297,6 +356,8 @@ class _RatingsScreenState extends State<RatingsScreen>
             ),
           ),
         ],
+      ),
+    ],
       ),
     );
   }
@@ -322,6 +383,7 @@ class _RatingsScreenState extends State<RatingsScreen>
         return StatefulBuilder(
           builder: (ctx2, setState) {
             return AlertDialog(
+              backgroundColor: Colors.white.withAlpha(243),
               title: Text('Rate ${other is Map ? (other['name'] ?? 'User') : 'User'}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -342,6 +404,9 @@ class _RatingsScreenState extends State<RatingsScreen>
               actions: [
                 TextButton(onPressed: () => Navigator.pop(ctx2), child: const Text('Cancel')),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
                   onPressed: loading
                       ? null
                       : () async {

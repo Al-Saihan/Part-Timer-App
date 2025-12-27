@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/job.dart';
@@ -51,7 +52,7 @@ Widget _buildProfileAvatar(Map<String, dynamic>? user, {double radius = 40}) {
       final assetPath = 'assets/avatars/$profilePic.png';
       return CircleAvatar(
         radius: radius,
-        backgroundColor: Colors.grey[200],
+        backgroundColor: const Color.fromARGB(255, 213, 240, 255),
         child: ClipOval(
           child: Image.asset(
             assetPath,
@@ -109,7 +110,13 @@ class HomeSeekerPage extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        extendBodyBehindAppBar: false,
         appBar: AppBar(
+          backgroundColor: const Color.fromARGB(255, 31, 143, 189),
+          foregroundColor: Colors.white,
+          toolbarHeight: 50,
+          elevation: 4,
+          shadowColor: const Color.fromARGB(255, 31, 143, 189).withAlpha(150),
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
@@ -119,6 +126,11 @@ class HomeSeekerPage extends StatelessWidget {
           title: const Text('Seeker Dashboard'),
           centerTitle: true,
           bottom: const TabBar(
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
             tabs: [
               Tab(text: 'Home'),
               Tab(text: 'Applied Jobs'),
@@ -127,8 +139,58 @@ class HomeSeekerPage extends StatelessWidget {
           ),
         ),
         drawer: _buildDrawer(context),
-        body: const TabBarView(
-          children: [HomeTab(), AppliedJobsTab(), ProfileTab()],
+        body: Stack(
+          children: [
+            // ? MARK: Background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color.fromARGB(255, 67, 163, 208), Color(0xFFE1F5FE)],
+                ),
+              ),
+            ),
+
+            // ? Soft decorative circle 1
+            Positioned(
+              top: -80,
+              left: -60,
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue.withAlpha(46),
+                  ),
+                ),
+              ),
+            ),
+
+            // ? Soft decorative circle 2
+            Positioned(
+              bottom: -40,
+              right: -50,
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(
+                  width: 400,
+                  height: 400,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color.fromARGB(255, 46, 17, 189).withAlpha(64),
+                  ),
+                ),
+              ),
+            ),
+
+            // Content
+            const TabBarView(
+              children: [HomeTab(), AppliedJobsTab(), ProfileTab()],
+            ),
+          ],
         ),
       ),
     );
@@ -205,6 +267,7 @@ class _HomeTabState extends State<HomeTab> {
                       flex: 3,
                       child: Card(
                         elevation: 4,
+                        color: const Color.fromARGB(255, 213, 240, 255),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -247,6 +310,7 @@ class _HomeTabState extends State<HomeTab> {
                       flex: 1,
                       child: Card(
                         elevation: 4,
+                        color: const Color.fromARGB(255, 213, 240, 255),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -318,6 +382,7 @@ class _HomeTabState extends State<HomeTab> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: 2,
+                    color: const Color.fromARGB(255, 213, 240, 255),
                       child: ListTile(
                         leading: job.recruiter != null ? _buildProfileAvatar(job.recruiter, radius: 20) : const CircleAvatar(child: Icon(Icons.work)),
                       onTap: () =>
@@ -509,6 +574,7 @@ class _AppliedJobsTabState extends State<AppliedJobsTab> {
 
               return Card(
                 elevation: 3,
+                color: const Color.fromARGB(255, 213, 240, 255),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -721,6 +787,7 @@ class _ProfileTabState extends State<ProfileTab> {
               children: [
                 Card(
                   elevation: 4,
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -766,6 +833,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
+                                color: const Color.fromARGB(255, 213, 240, 255),
                                 child: SizedBox(
                                   height: 120,
                                   child: Center(
@@ -786,6 +854,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 10,
                                         ),
+                                        side: const BorderSide(color: Colors.blue),
+                                        foregroundColor: Colors.blue,
                                       ),
                                       onPressed: () =>
                                           _showProfileActions(user),
@@ -807,6 +877,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Bio section
                 Card(
                   elevation: 2,
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -836,6 +907,9 @@ class _ProfileTabState extends State<ProfileTab> {
                           children: [
                             const Spacer(),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
                               onPressed: _loadingBio
                                   ? null
                                   : () => _updateField('bio'),
@@ -862,6 +936,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Skills section
                 Card(
                   elevation: 2,
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -890,6 +965,9 @@ class _ProfileTabState extends State<ProfileTab> {
                           children: [
                             const Spacer(),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
                               onPressed: _loadingSkills
                                   ? null
                                   : () => _updateField('skills'),
@@ -916,6 +994,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 // Locations section
                 Card(
                   elevation: 2,
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -944,6 +1023,9 @@ class _ProfileTabState extends State<ProfileTab> {
                           children: [
                             const Spacer(),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                              ),
                               onPressed: _loadingLocations
                                   ? null
                                   : () => _updateField('locations'),
@@ -1083,7 +1165,15 @@ Drawer _buildDrawer(BuildContext context) {
       padding: EdgeInsets.zero,
       children: [
         const DrawerHeader(
-          decoration: BoxDecoration(color: Color.fromARGB(255, 111, 146, 175)),
+          decoration: BoxDecoration(
+            
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color.fromARGB(255, 67, 163, 208), Color.fromARGB(255, 0, 101, 147)],
+            ),
+          ),
+          
           child: Text(
             'Quick Settings',
             style: TextStyle(color: Colors.white, fontSize: 24),
@@ -1224,6 +1314,7 @@ Future<void> _showJobDetails(
     context: context,
     builder: (context) {
       return Dialog(
+        backgroundColor: const Color.fromARGB(255, 213, 240, 255),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -1342,6 +1433,9 @@ Future<void> _showJobDetails(
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                          ),
                           icon: const Icon(Icons.send),
                           label: const Text('Apply'),
                           onPressed: () async {
