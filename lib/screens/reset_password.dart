@@ -60,7 +60,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Reset Password'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color.fromARGB(255, 31, 143, 189),
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Stack(
@@ -118,7 +119,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: Card(
                   elevation: 8,
-                  color: Colors.white.withAlpha(243),
+                  color: const Color.fromARGB(255, 213, 240, 255),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -208,7 +209,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                         side: const BorderSide(color: Colors.blue),
                                       ),
                                       onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancel'),
+                                      child: const Text('Cancel' , style: TextStyle(color: Colors.blue),),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -227,7 +228,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                                 color: Colors.white,
                                               ),
                                             )
-                                          : const Text('Reset Password'),
+                                          : const Text('Reset Password', style: TextStyle(color: Colors.white),),
                                     ),
                                   ),
                                 ],
@@ -247,3 +248,4 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
   }
 }
+
